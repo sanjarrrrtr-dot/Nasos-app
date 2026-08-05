@@ -84,6 +84,7 @@ export default function App() {
         setActiveManager={setActiveManager}
         onNewRequest={() => setShowNewForm(true)}
       />
+
       <div style={styles.body}>
         <div style={styles.page}>
           <div style={styles.statsRow}>
@@ -95,7 +96,7 @@ export default function App() {
 
           {errorMsg && (
             <div style={styles.errorBanner}>
-              ⚠ Не удалось связаться с базой данных: {errorMsg}
+              ⚠️ Не удалось связаться с базой данных: {errorMsg}
             </div>
           )}
 
@@ -103,7 +104,7 @@ export default function App() {
             <div style={styles.emptyState}>Загрузка заявок…</div>
           ) : requests.length === 0 ? (
             <div style={styles.emptyState}>
-              Заявок пока нет. Они появятся здесь автоматически, как только клиент отправит заявку,
+              Заявок пока нет. Они появятся здесь автоматически, как только клиент отправит заявку с сайта,
               или вы можете создать заявку вручную кнопкой выше.
             </div>
           ) : (
@@ -155,11 +156,7 @@ function TopBar({ activeManager, setActiveManager, onNewRequest }) {
         <button style={styles.primaryBtnSm} onClick={onNewRequest}>
           + Новая заявка
         </button>
-        <select
-          style={styles.managerSelect}
-          value={activeManager}
-          onChange={(e) => setActiveManager(e.target.value)}
-        >
+        <select style={styles.managerSelect} value={activeManager} onChange={(e) => setActiveManager(e.target.value)}>
           {MANAGERS.map((m) => (
             <option key={m.id} value={m.id}>
               {m.name}
@@ -208,9 +205,8 @@ function NewRequestModal({ onClose, onCreated }) {
     setStage('searching');
     setError(null);
     try {
-      const { items, totalFound, regionStatus } = await searchAllCountries(
-        form.model.trim(),
-        (c, s) => setProgress((p) => ({ ...p, [c]: s }))
+      const { items, totalFound, regionStatus } = await searchAllCountries(form.model.trim(), (c, s) =>
+        setProgress((p) => ({ ...p, [c]: s }))
       );
       await createRequest({
         status: 'new',
@@ -242,11 +238,11 @@ function NewRequestModal({ onClose, onCreated }) {
           <span style={styles.eyebrow}>НОВАЯ ЗАЯВКА ВРУЧНУЮ</span>
           <button style={styles.modalClose} onClick={onClose}>×</button>
         </div>
+
         <form onSubmit={handleSubmit} style={styles.form}>
           <Field label="Модель насоса" required>
-            <input style={styles.input} value={form.model} onChange={set('model')} disabled={stage === 'searching'} />
+            <input style={styles.input} value={form.model} onChange={set('model')} disabled={stage === 'searching'} placeholder="Марка / артикул" />
           </Field>
-
           <div style={styles.row2}>
             <Field label="Количество" required>
               <input type="number" min="1" style={styles.input} value={form.quantity} onChange={set('quantity')} disabled={stage === 'searching'} />
@@ -257,22 +253,20 @@ function NewRequestModal({ onClose, onCreated }) {
               </select>
             </Field>
           </div>
-
           <div style={styles.row2}>
             <Field label="Срок поставки">
-              <input style={styles.input} value={form.deadline} onChange={set('deadline')} disabled={stage === 'searching'} />
+              <input style={styles.input} value={form.deadline} onChange={set('deadline')} disabled={stage === 'searching'} placeholder="например: до 15 сентября" />
             </Field>
             <Field label="Регион доставки">
-              <input style={styles.input} value={form.region} onChange={set('region')} disabled={stage === 'searching'} />
+              <input style={styles.input} value={form.region} onChange={set('region')} disabled={stage === 'searching'} placeholder="город" />
             </Field>
           </div>
-
           <div style={styles.row2}>
             <Field label="Клиент / компания">
               <input style={styles.input} value={form.clientName} onChange={set('clientName')} disabled={stage === 'searching'} />
             </Field>
             <Field label="Телефон" required>
-              <input style={styles.input} value={form.phone} onChange={set('phone')} disabled={stage === 'searching'} />
+              <input style={styles.input} value={form.phone} onChange={set('phone')} disabled={stage === 'searching'} placeholder="+7 ..." />
             </Field>
           </div>
 
@@ -284,9 +278,7 @@ function NewRequestModal({ onClose, onCreated }) {
 
           {stage === 'searching' && (
             <div style={styles.progressGrid}>
-              {['KZ', 'RU', 'EU', 'CN'].map((c) => (
-                <ProgressPill key={c} country={c} status={progress[c]?.status} />
-              ))}
+              {['KZ', 'RU', 'EU', 'CN'].map((c) => <ProgressPill key={c} country={c} status={progress[c]} />)}
             </div>
           )}
         </form>
@@ -323,10 +315,10 @@ function Field({ label, required, children }) {
 
 const CLOSE_REASONS = [
   { value: 'success', label: '✅ Закрыть сделку (успешно)' },
-  { value: 'cheaper', label: '💰 Нашли дешевле' },
-  { value: 'no_response', label: '🚫 Нет обратной связи' },
-  { value: 'cancelled', label: '⛔ Отменили закуп' },
-  { value: 'competitor', label: '📦 Купили у конкурента' },
+  { value: 'cheaper', label: '💸 Нашли дешевле' },
+  { value: 'no_response', label: '🔇 Нет обратной связи' },
+  { value: 'cancelled', label: '🚫 Отменили закуп' },
+  { value: 'competitor', label: '🏳️ Купили у конкурента' },
   { value: 'tender', label: '📋 Тендерщики' },
   { value: 'no_need', label: '➖ Нет потребности' },
   { value: 'failed', label: '❌ Сделка провалена' },
@@ -337,7 +329,6 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
   const [costPrice, setCostPrice] = useState(req.cost_price || '');
   const [margin, setMargin] = useState(req.margin || '');
   const [closeReason, setCloseReason] = useState('');
-
   const claimedByMe = req.claimed_by === activeManager;
   const claimedByOther = req.claimed_by && req.claimed_by !== activeManager;
   const managerName = (id) => MANAGERS.find((m) => m.id === id)?.name || id;
@@ -387,7 +378,7 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
             <DetailRow label="Телефон" value={req.phone} />
             <DetailRow label="Срок поставки" value={req.deadline} />
             <DetailRow label="Подана" value={new Date(req.created_at).toLocaleString('ru-RU')} />
-            <DetailRow label="Ведёт" value={req.claimed_by ? managerName(req.claimed_by) : '—'} />
+            <DetailRow label="Ведёт" value={req.claimed_by ? managerName(req.claimed_by) : '— никто пока не взял —'} />
           </div>
 
           <div style={styles.regionRow}>
@@ -401,7 +392,7 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
           )}
 
           {claimedByOther ? (
-            <div style={styles.claimedNotice}>⚠ Эту заявку уже ведёт {managerName(req.claimed_by)}</div>
+            <div style={styles.claimedNotice}>⚠️ Эту заявку уже ведёт {managerName(req.claimed_by)}.</div>
           ) : (
             claimedByMe && req.status !== 'closed' && (
               <div style={styles.marginCalc}>
@@ -429,10 +420,10 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
 
                 {(cp > 0 || m > 0) && (
                   <div style={styles.calcBreakdown}>
-                    <div style={styles.calcRow}><span>Закупка + маржа</span><span>{subtotal.toLocaleString('ru-RU')}</span></div>
-                    <div style={styles.calcRow}><span>НДС 16%</span><span>{Math.round(vat).toLocaleString('ru-RU')}</span></div>
-                    <div style={styles.calcRowTotal}><span>Итого клиенту</span><span>{Math.round(totalWithVat).toLocaleString('ru-RU')}</span></div>
-                    <div style={styles.calcRowEarn}><span>Ваш заработок (20%)</span><span>{Math.round(managerEarnings).toLocaleString('ru-RU')}</span></div>
+                    <div style={styles.calcRow}><span>Закупка + маржа</span><span>{subtotal.toLocaleString('ru-RU')} тг</span></div>
+                    <div style={styles.calcRow}><span>НДС 16%</span><span>{Math.round(vat).toLocaleString('ru-RU')} тг</span></div>
+                    <div style={styles.calcRowTotal}><span>Итого клиенту</span><span>{Math.round(totalWithVat).toLocaleString('ru-RU')} тг</span></div>
+                    <div style={styles.calcRowEarn}><span>Ваш заработок (20%)</span><span>{Math.round(managerEarnings).toLocaleString('ru-RU')} тг</span></div>
                   </div>
                 )}
 
@@ -441,7 +432,7 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
                 </button>
 
                 {req.price_quoted && (
-                  <div style={styles.priceTag}>Цена клиенту: <strong>{Number(req.price_quoted).toLocaleString('ru-RU')}</strong></div>
+                  <div style={styles.priceTag}>Цена клиенту: <strong>{Number(req.price_quoted).toLocaleString('ru-RU')} тг</strong></div>
                 )}
 
                 <div style={styles.closeRow}>
@@ -504,8 +495,28 @@ function RegionBadge({ country, status, message }) {
   );
 }
 
+const DOMAIN_TO_COUNTRY = {
+  kz: 'KZ', ru: 'RU', by: 'RU', de: 'EU', eu: 'EU', it: 'EU', fr: 'EU', pl: 'EU', es: 'EU',
+  cn: 'CN', 'com.cn': 'CN',
+};
+
+function detectDomainCountry(link) {
+  try {
+    const host = new URL(link).hostname.toLowerCase();
+    const parts = host.split('.');
+    const tld2 = parts.slice(-2).join('.');
+    const tld1 = parts[parts.length - 1];
+    return DOMAIN_TO_COUNTRY[tld2] || DOMAIN_TO_COUNTRY[tld1] || null;
+  } catch {
+    return null;
+  }
+}
+
 function ProductRow({ p, index }) {
   const meta = COUNTRY_META[p._country];
+  const domainCountry = p.link ? detectDomainCountry(p.link) : null;
+  const mismatch = domainCountry && domainCountry !== p._country;
+
   return (
     <div style={styles.productRow}>
       <div style={styles.productIndex}>{index + 1}</div>
@@ -513,6 +524,11 @@ function ProductRow({ p, index }) {
         <div style={styles.productTitle}>{meta?.flag} {p.title || 'Товар'}</div>
         {p.snippet && <div style={styles.productSnippet}>{p.snippet}</div>}
         {p.link && <a href={p.link} target="_blank" rel="noreferrer" style={styles.productLink}>{p.link}</a>}
+        {mismatch && (
+          <div style={styles.domainWarning}>
+            ⚠️ Домен сайта похож на другой регион ({domainCountry}) — проверьте, действительно ли поставщик из {meta?.label}
+          </div>
+        )}
       </div>
     </div>
   );
