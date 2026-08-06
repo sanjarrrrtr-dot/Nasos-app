@@ -61,22 +61,19 @@ function getCountryFromDomain(url) {
   return null;
 }
 
-export function dedupeAndFilter(allItems) {
+function isDomainVerified(p) {
+  // проверяет, соответствует ли домен страны заявленному региону
+  if (!p.link || !p._country) return false;
+  const validDomains = getValidDomainsForCountry(p._country);
+  if (validDomains.length === 0) return true; // если страна неизвестна, считаем проверенным
+  const domainTld = getCountryFromDomain(p.link);
+  return validDomains.some((d) => domainTld === d);
+}
+
+function dedupeByKey(items) {
   const seen = new Set();
   const priority = { KZ: 1, CN: 2, RU: 3, EU: 4 };
-  return allItems
-    .filter((p) => {
-      const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
-      return !BAD_WORDS.some((w) => text.includes(w));
-    })
-    .filter((p) => {
-      // жёсткий фильтр по домену страны
-      if (!p.link || !p._country) return false;
-      const validDomains = getValidDomainsForCountry(p._country);
-      if (validDomains.length === 0) return true; // если страна неизвестна, проходит всё
-      const domainTld = getCountryFromDomain(p.link);
-      return validDomains.some((d) => domainTld === d);
-    })
+  return items
     .filter((p) => {
       const key = (p.link || p.title || '').toLowerCase();
       if (seen.has(key)) return false;
@@ -84,6 +81,25 @@ export function dedupeAndFilter(allItems) {
       return true;
     })
     .sort((a, b) => (priority[a._country] || 5) - (priority[b._country] || 5));
+}
+
+// Возвращает ВСЕ результаты (без строгого домен-фильтра, только без "плохих" слов)
+export function filterAll(rawItems) {
+  const cleaned = rawItems.filter((p) => {
+    const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
+    return !BAD_WORDS.some((w) => text.includes(w));
+  });
+  return dedupeByKey(cleaned).map((p) => ({ ...p, _verified: isDomainVerified(p) }));
+}
+
+// Возвращает только ПРОВЕРЕННЫЕ (домен совпадает со страной поиска)
+export function filterVerified(allFiltered) {
+  return allFiltered.filter((p) => p._verified);
+}
+
+// Оставлено для обратной совместимости — теперь просто алиас на filterVerified(filterAll(...))
+export function dedupeAndFilter(rawItems) {
+  return filterVerified(filterAll(rawItems));
 }
 
 export async function searchAllCountries(model, onProgress) {
@@ -95,12 +111,23 @@ export async function searchAllCountries(model, onProgress) {
     onProgress?.(c, r.status);
     results.push(r);
   }
-  const allItems = [];
+  const rawItems = [];
   const regionStatus = {};
   for (const r of results) {
     regionStatus[r.country] = { status: r.status, message: r.message || null };
-    for (const item of r.items) allItems.push({ ...item, _country: r.country });
+    for (const item of r.items) rawItems.push({ ...item, _country: r.country });
   }
-  const finalItems = dedupeAndFilter(allItems);
-  return { items: finalItems.slice(0, 40), totalFound: finalItems.length, regionStatus };
+
+  const allFiltered = filterAll(rawItems);
+  const verified = filterVerified(allFiltered);
+
+  return {
+    // "чистые" — прошли домен-фильтр по стране (главный список)
+    items: verified.slice(0, 40),
+    totalFound: verified.length,
+    // весь пул результатов (включая непроверенные), с флагом _verified на каждом
+    allItems: allFiltered.slice(0, 60),
+    totalFoundAll: allFiltered.length,
+    regionStatus,
+  };
 }
