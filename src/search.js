@@ -1,4 +1,4 @@
-import { classifySource, SourceType, checkRegionMismatch } from './searchFilters';
+import { scoreResult, dedupeResults, Tier } from './searchFilters';
 
 const SERPER_KEY = '37e15324b8adf3b2e1e2536ac9e0459ac3cc7d2d';
 
@@ -70,46 +70,48 @@ function isDomainVerified(p) {
   return validDomains.some((d) => domainTld === d);
 }
 
-function dedupeByKey(items) {
-  const seen = new Set();
-  const priority = { KZ: 1, CN: 2, RU: 3, EU: 4 };
-  return items
-    .filter((p) => {
-      const key = (p.link || p.title || '').toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .sort((a, b) => (priority[a._country] || 5) - (priority[b._country] || 5));
-}
+const FLAG_BY_COUNTRY = { KZ: '🇰🇿', RU: '🇷🇺', EU: '🇪🇺', CN: '🇨🇳' };
 
-// Возвращает ВСЕ результаты — фильтрует по BAD_WORDS + по типу источника
-// (мусор всегда отсекается; маркетплейсы/реселлеры/PDF отсекаются по умолчанию,
-// поменяй SHOW_MARKETPLACES/SHOW_RESELLERS/SHOW_DOCUMENTS на true, если нужно их видеть)
-const SHOW_MARKETPLACES = false;
-const SHOW_RESELLERS = false;
-const SHOW_DOCUMENTS = false;
+// Показывать ли группу "возможно норм" (MAYBE) в основной выдаче.
+// true = не теряем пограничные случаи вроде nt-rt.ru, но выдача чуть шире.
+const SHOW_MAYBE_TIER = true;
 
+// Возвращает ВСЕ результаты — теперь с баллами и делением на группы
+// RELIABLE / MAYBE / HIDE вместо жёсткого да/нет.
 export function filterAll(rawItems) {
-  const FLAG_BY_COUNTRY = { KZ: '🇰🇿', RU: '🇷🇺', EU: '🇪🇺', CN: '🇨🇳' };
+  const cleaned = rawItems.filter((p) => {
+    const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
+    return !BAD_WORDS.some((w) => text.includes(w));
+  });
 
-  const cleaned = rawItems
-    .filter((p) => {
-      const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
-      return !BAD_WORDS.some((w) => text.includes(w));
-    })
-    .map((p) => {
-      const adapted = { url: p.link, title: p.title, snippet: p.snippet, flag: FLAG_BY_COUNTRY[p._country] };
-      const sourceType = classifySource(adapted);
-      const regionCheck = checkRegionMismatch(adapted);
-      return { ...p, _sourceType: sourceType, _regionMismatch: regionCheck.mismatch };
-    })
-    .filter((p) => p._sourceType !== SourceType.JUNK)
-    .filter((p) => SHOW_MARKETPLACES || p._sourceType !== SourceType.MARKETPLACE)
-    .filter((p) => SHOW_RESELLERS || p._sourceType !== SourceType.RESELLER)
-    .filter((p) => SHOW_DOCUMENTS || p._sourceType !== SourceType.DOCUMENT);
+  const scored = cleaned.map((p) => {
+    const adapted = { url: p.link, title: p.title, snippet: p.snippet, flag: FLAG_BY_COUNTRY[p._country] };
+    const result = scoreResult(adapted);
+    return {
+      ...p,
+      _score: result.score,
+      _tier: result.tier,
+      _label: result.label,
+      _reasons: result.reasons,
+    };
+  });
 
-  return dedupeByKey(cleaned).map((p) => ({ ...p, _verified: isDomainVerified(p) }));
+  // Мусор (HIDE) отсекаем всегда. MAYBE — оставляем, если включено выше.
+  const filtered = scored
+    .filter((p) => p._tier !== Tier.HIDE)
+    .filter((p) => SHOW_MAYBE_TIER || p._tier !== Tier.MAYBE);
+
+  const deduped = dedupeResults(filtered);
+
+  // Сортировка: сначала RELIABLE по убыванию балла, потом MAYBE по убыванию балла
+  const tierRank = { [Tier.RELIABLE]: 0, [Tier.MAYBE]: 1, [Tier.HIDE]: 2 };
+  deduped.sort((a, b) => {
+    const diff = tierRank[a._tier] - tierRank[b._tier];
+    if (diff !== 0) return diff;
+    return b._score - a._score;
+  });
+
+  return deduped.map((p) => ({ ...p, _verified: isDomainVerified(p) }));
 }
 
 // Возвращает только ПРОВЕРЕННЫЕ (домен совпадает со страной поиска)
