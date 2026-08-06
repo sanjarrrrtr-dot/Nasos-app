@@ -1,3 +1,5 @@
+import { classifySource, SourceType, checkRegionMismatch } from './searchFilters';
+
 const SERPER_KEY = '37e15324b8adf3b2e1e2536ac9e0459ac3cc7d2d';
 
 export const COUNTRY_META = {
@@ -49,7 +51,6 @@ function getValidDomainsForCountry(country) {
 function getCountryFromDomain(url) {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
-    // извлекаем расширение домена (последний .xxx)
     const parts = hostname.split('.');
     if (parts.length >= 2) {
       const tld = '.' + parts[parts.length - 1];
@@ -62,10 +63,9 @@ function getCountryFromDomain(url) {
 }
 
 function isDomainVerified(p) {
-  // проверяет, соответствует ли домен страны заявленному региону
   if (!p.link || !p._country) return false;
   const validDomains = getValidDomainsForCountry(p._country);
-  if (validDomains.length === 0) return true; // если страна неизвестна, считаем проверенным
+  if (validDomains.length === 0) return true;
   const domainTld = getCountryFromDomain(p.link);
   return validDomains.some((d) => domainTld === d);
 }
@@ -83,12 +83,32 @@ function dedupeByKey(items) {
     .sort((a, b) => (priority[a._country] || 5) - (priority[b._country] || 5));
 }
 
-// Возвращает ВСЕ результаты (без строгого домен-фильтра, только без "плохих" слов)
+// Возвращает ВСЕ результаты — фильтрует по BAD_WORDS + по типу источника
+// (мусор всегда отсекается; маркетплейсы/реселлеры/PDF отсекаются по умолчанию,
+// поменяй SHOW_MARKETPLACES/SHOW_RESELLERS/SHOW_DOCUMENTS на true, если нужно их видеть)
+const SHOW_MARKETPLACES = false;
+const SHOW_RESELLERS = false;
+const SHOW_DOCUMENTS = false;
+
 export function filterAll(rawItems) {
-  const cleaned = rawItems.filter((p) => {
-    const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
-    return !BAD_WORDS.some((w) => text.includes(w));
-  });
+  const FLAG_BY_COUNTRY = { KZ: '🇰🇿', RU: '🇷🇺', EU: '🇪🇺', CN: '🇨🇳' };
+
+  const cleaned = rawItems
+    .filter((p) => {
+      const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
+      return !BAD_WORDS.some((w) => text.includes(w));
+    })
+    .map((p) => {
+      const adapted = { url: p.link, title: p.title, snippet: p.snippet, flag: FLAG_BY_COUNTRY[p._country] };
+      const sourceType = classifySource(adapted);
+      const regionCheck = checkRegionMismatch(adapted);
+      return { ...p, _sourceType: sourceType, _regionMismatch: regionCheck.mismatch };
+    })
+    .filter((p) => p._sourceType !== SourceType.JUNK)
+    .filter((p) => SHOW_MARKETPLACES || p._sourceType !== SourceType.MARKETPLACE)
+    .filter((p) => SHOW_RESELLERS || p._sourceType !== SourceType.RESELLER)
+    .filter((p) => SHOW_DOCUMENTS || p._sourceType !== SourceType.DOCUMENT);
+
   return dedupeByKey(cleaned).map((p) => ({ ...p, _verified: isDomainVerified(p) }));
 }
 
@@ -97,7 +117,7 @@ export function filterVerified(allFiltered) {
   return allFiltered.filter((p) => p._verified);
 }
 
-// Оставлено для обратной совместимости — теперь просто алиас на filterVerified(filterAll(...))
+// Оставлено для обратной совместимости
 export function dedupeAndFilter(rawItems) {
   return filterVerified(filterAll(rawItems));
 }
@@ -122,10 +142,8 @@ export async function searchAllCountries(model, onProgress) {
   const verified = filterVerified(allFiltered);
 
   return {
-    // "чистые" — прошли домен-фильтр по стране (главный список)
     items: verified.slice(0, 40),
     totalFound: verified.length,
-    // весь пул результатов (включая непроверенные), с флагом _verified на каждом
     allItems: allFiltered.slice(0, 60),
     totalFoundAll: allFiltered.length,
     regionStatus,
