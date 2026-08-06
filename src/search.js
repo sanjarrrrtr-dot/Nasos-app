@@ -9,54 +9,6 @@ export const COUNTRY_META = {
 
 const BAD_WORDS = ['посредник', 'перекупщик', 'reseller', 'broker', '中间商'];
 
-// Каталоги-агрегаторы и маркетплейсы — не заводы и не официальные дилеры,
-// но словами из BAD_WORDS не ловятся, поэтому режем по домену отдельно.
-const BLOCKED_DOMAINS = [
-  'alibaba.com',
-  '1688.com',
-  'made-in-china.com',
-  '51sole.com',
-  'globalsources.com',
-  'aliexpress.com',
-  'dhgate.com',
-  'ec21.com',
-  'tradeindia.com',
-  'indiamart.com',
-  'exportersindia.com',
-  'ebay.com',
-  'amazon.com',
-  'amazon.de',
-  'wanted.chinadaily.com.cn',
-  'china.cn',
-];
-
-function getDomain(url) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '').toLowerCase();
-  } catch {
-    return '';
-  }
-}
-
-function isBlockedDomain(url) {
-  const domain = getDomain(url);
-  if (!domain) return false;
-  return BLOCKED_DOMAINS.some((bad) => domain === bad || domain.endsWith('.' + bad));
-}
-
-// Пытаемся вытащить цену из сниппета (число + рядом валюта/символ).
-// Возвращает число в условных единицах для сравнения (без конвертации валют) или null.
-function extractPrice(text) {
-  if (!text) return null;
-  const match = text.match(
-    /(?:[$€₽¥]|USD|EUR|RUB|CNY|KZT|₸)\s?([\d\s,.]{1,12}\d)|(\d[\d\s,.]{0,11}\d)\s?(?:[$€₽¥]|USD|EUR|RUB|CNY|KZT|₸|руб|тенге|元)/i,
-  );
-  if (!match) return null;
-  const raw = (match[1] || match[2] || '').replace(/[\s,]/g, '');
-  const num = parseFloat(raw);
-  return Number.isFinite(num) ? num : null;
-}
-
 function buildQuery(country, model) {
   if (country === 'KZ') return `насос ${model} завод OR производитель OR дилер OR дистрибьютор -посредник -перекупщик Казахстан`;
   if (country === 'RU') return `насос ${model} завод OR производитель OR дилер OR дистрибьютор -посредник -перекупщик Россия`;
@@ -84,36 +36,54 @@ export async function searchCountry(country, model) {
   }
 }
 
+function getValidDomainsForCountry(country) {
+  const domainMap = {
+    KZ: ['.kz'],
+    RU: ['.ru'],
+    EU: ['.eu', '.de', '.fr', '.nl', '.be', '.at', '.ch', '.se', '.no', '.dk', '.pl', '.cz', '.sk', '.hu', '.ro', '.bg', '.hr', '.si', '.lt', '.lv', '.ee', '.pt', '.es', '.it', '.gr', '.ie', '.uk', '.fi', '.is'],
+    CN: ['.cn'],
+  };
+  return domainMap[country] || [];
+}
+
+function getCountryFromDomain(url) {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    // извлекаем расширение домена (последний .xxx)
+    const parts = hostname.split('.');
+    if (parts.length >= 2) {
+      const tld = '.' + parts[parts.length - 1];
+      return tld;
+    }
+  } catch (e) {
+    // некорректный URL, пропускаем
+  }
+  return null;
+}
+
 export function dedupeAndFilter(allItems) {
   const seen = new Set();
-  const priority = { KZ: 1, RU: 2, CN: 3, EU: 4 };
-
+  const priority = { KZ: 1, CN: 2, RU: 3, EU: 4 };
   return allItems
-    // словесный фильтр (посредник/reseller/中间商 и т.п.)
     .filter((p) => {
       const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
       return !BAD_WORDS.some((w) => text.includes(w));
     })
-    // фильтр по доменам-каталогам (Alibaba/1688/51sole и т.п.)
-    .filter((p) => !isBlockedDomain(p.link || ''))
-    // дедупликация
+    .filter((p) => {
+      // жёсткий фильтр по домену страны
+      if (!p.link || !p._country) return false;
+      const validDomains = getValidDomainsForCountry(p._country);
+      if (validDomains.length === 0) return true; // если страна неизвестна, проходит всё
+      const domainTld = getCountryFromDomain(p.link);
+      return validDomains.some((d) => domainTld === d);
+    })
     .filter((p) => {
       const key = (p.link || p.title || '').toLowerCase();
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     })
-    // добавляем распознанную цену
-    .map((p) => ({ ...p, _price: extractPrice(p.snippet || p.title || '') }))
-    // сортировка: сначала по приоритету страны, внутри страны — по цене (дешевле сначала, без цены — в конец)
-    .sort((a, b) => {
-      const countryDiff = (priority[a._country] || 5) - (priority[b._country] || 5);
-      if (countryDiff !== 0) return countryDiff;
-      if (a._price == null && b._price == null) return 0;
-      if (a._price == null) return 1;
-      if (b._price == null) return -1;
-      return a._price - b._price;
-    });
+    .sort((a, b) => (priority[a._country] || 5) - (priority[b._country] || 5));
 }
 
 export async function searchAllCountries(model, onProgress) {
