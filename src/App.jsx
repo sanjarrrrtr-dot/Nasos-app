@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchRequests, updateRequest, createRequest } from './supabase.js';
-import { COUNTRY_META, searchAllCountries } from './search.js';
+import { COUNTRY_META, searchAllCountries } from './search';
 import { styles } from './styles.js';
 
 const MANAGERS = [
