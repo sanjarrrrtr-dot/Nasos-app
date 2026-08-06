@@ -1,5 +1,3 @@
-import { scoreResult, dedupeResults, Tier } from './searchFilters';
-
 const SERPER_KEY = '37e15324b8adf3b2e1e2536ac9e0459ac3cc7d2d';
 
 export const COUNTRY_META = {
@@ -10,6 +8,66 @@ export const COUNTRY_META = {
 };
 
 const BAD_WORDS = ['посредник', 'перекупщик', 'reseller', 'broker', '中间商'];
+
+// TIER система — определяем надёжность по домену/хостингу
+const RELIABLE_DOMAINS = {
+  KZ: ['.kz'],
+  RU: ['.ru'],
+  EU: ['.eu', '.de', '.fr', '.nl', '.be', '.at', '.ch', '.se', '.no', '.dk', '.pl', '.cz', '.sk', '.hu', '.ro', '.bg', '.hr', '.si', '.lt', '.lv', '.ee', '.pt', '.es', '.it', '.gr', '.ie', '.uk', '.fi', '.is'],
+  CN: ['.cn'],
+};
+
+const KNOWN_RELIABLE_HOSTS = [
+  'grundfos.com', 'ebara.com', 'xylem.com', 'sulzer.com', 'weir.com', 
+  'flowserve.com', 'itt.com', 'goulds.com', 'goulds-pumps.com',
+  'alibaba.com', 'globalpiyasa.com',
+];
+
+const KNOWN_LOW_QUALITY = [
+  'e-katalog', 'tolchek', 'lunda', 'satu', 'comfort-klimat', 'sistema-2000',
+  'avelinprom', 'hydroalliance', 'nasosclub', 'nt-rt', 'teplosnab',
+];
+
+function scoreReliability(url, country) {
+  let score = 0;
+  const hostname = new URL(url).hostname.toLowerCase();
+  
+  // Проверяем известные надёжные бренды
+  if (KNOWN_RELIABLE_HOSTS.some(h => hostname.includes(h))) {
+    score += 100; // очень надёжные
+    return { score, tier: 'RELIABLE' };
+  }
+  
+  // Проверяем известный мусор
+  if (KNOWN_LOW_QUALITY.some(kw => hostname.includes(kw))) {
+    score = 10;
+    return { score, tier: 'LOW' };
+  }
+  
+  // Проверяем домен по стране
+  const validDomains = RELIABLE_DOMAINS[country] || [];
+  const tld = '.' + hostname.split('.').pop();
+  if (validDomains.includes(tld)) {
+    score += 60; // хороший домен по стране
+  } else {
+    score += 20; // не совпадает с доменом страны
+  }
+  
+  // Штрафы за подозрительные признаки
+  if (hostname.includes('alibaba') || hostname.includes('aliexpress')) {
+    score -= 10; // китайские маркетплейсы — среднее качество
+  }
+  if (hostname.length > 40 || hostname.includes('temp') || hostname.includes('shop')) {
+    score -= 5; // подозрительные хосты
+  }
+  
+  // Определяем tier по score
+  let tier = 'LOW';
+  if (score >= 60) tier = 'RELIABLE';
+  else if (score >= 30) tier = 'MEDIUM';
+  
+  return { score, tier };
+}
 
 function buildQuery(country, model) {
   if (country === 'KZ') return `насос ${model} завод OR производитель OR дилер OR дистрибьютор -посредник -перекупщик Казахстан`;
@@ -32,96 +90,42 @@ export async function searchCountry(country, model) {
       return { country, status: 'error', message: data.message || data.error, items: [] };
     }
     const items = Array.isArray(data.organic) ? data.organic : [];
-    return { country, status: items.length ? 'ok' : 'empty', items };
+    // Добавляем scoring каждому результату
+    const itemsWithScore = items.map(item => ({
+      ...item,
+      _country: country,
+      ...scoreReliability(item.link, country),
+    }));
+    return { country, status: items.length ? 'ok' : 'empty', items: itemsWithScore };
   } catch (err) {
     return { country, status: 'error', message: String(err.message || err), items: [] };
   }
 }
 
-function getValidDomainsForCountry(country) {
-  const domainMap = {
-    KZ: ['.kz'],
-    RU: ['.ru'],
-    EU: ['.eu', '.de', '.fr', '.nl', '.be', '.at', '.ch', '.se', '.no', '.dk', '.pl', '.cz', '.sk', '.hu', '.ro', '.bg', '.hr', '.si', '.lt', '.lv', '.ee', '.pt', '.es', '.it', '.gr', '.ie', '.uk', '.fi', '.is'],
-    CN: ['.cn'],
-  };
-  return domainMap[country] || [];
-}
-
-function getCountryFromDomain(url) {
-  try {
-    const hostname = new URL(url).hostname.toLowerCase();
-    const parts = hostname.split('.');
-    if (parts.length >= 2) {
-      const tld = '.' + parts[parts.length - 1];
-      return tld;
-    }
-  } catch (e) {
-    // некорректный URL, пропускаем
-  }
-  return null;
-}
-
-function isDomainVerified(p) {
-  if (!p.link || !p._country) return false;
-  const validDomains = getValidDomainsForCountry(p._country);
-  if (validDomains.length === 0) return true;
-  const domainTld = getCountryFromDomain(p.link);
-  return validDomains.some((d) => domainTld === d);
-}
-
-const FLAG_BY_COUNTRY = { KZ: '🇰🇿', RU: '🇷🇺', EU: '🇪🇺', CN: '🇨🇳' };
-
-// Показывать ли группу "возможно норм" (MAYBE) в основной выдаче.
-// true = не теряем пограничные случаи вроде nt-rt.ru, но выдача чуть шире.
-const SHOW_MAYBE_TIER = true;
-
-// Возвращает ВСЕ результаты — теперь с баллами и делением на группы
-// RELIABLE / MAYBE / HIDE вместо жёсткого да/нет.
-export function filterAll(rawItems) {
-  const cleaned = rawItems.filter((p) => {
-    const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
-    return !BAD_WORDS.some((w) => text.includes(w));
+export function dedupeAndFilter(allItems) {
+  const seen = new Set();
+  const priority = { KZ: 1, CN: 2, RU: 3, EU: 4 };
+  
+  // Фильтруем мусор и дедуплицируем
+  const filtered = allItems
+    .filter((p) => {
+      const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
+      return !BAD_WORDS.some((w) => text.includes(w));
+    })
+    .filter((p) => {
+      const key = (p.link || p.title || '').toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  
+  // Сортируем по приоритету страны + надёжности
+  return filtered.sort((a, b) => {
+    const tierOrder = { RELIABLE: 0, MEDIUM: 1, LOW: 2 };
+    const tierDiff = (tierOrder[a.tier] || 2) - (tierOrder[b.tier] || 2);
+    if (tierDiff !== 0) return tierDiff;
+    return (priority[a._country] || 5) - (priority[b._country] || 5);
   });
-
-  const scored = cleaned.map((p) => {
-    const adapted = { url: p.link, title: p.title, snippet: p.snippet, flag: FLAG_BY_COUNTRY[p._country] };
-    const result = scoreResult(adapted);
-    return {
-      ...p,
-      _score: result.score,
-      _tier: result.tier,
-      _label: result.label,
-      _reasons: result.reasons,
-    };
-  });
-
-  // Мусор (HIDE) отсекаем всегда. MAYBE — оставляем, если включено выше.
-  const filtered = scored
-    .filter((p) => p._tier !== Tier.HIDE)
-    .filter((p) => SHOW_MAYBE_TIER || p._tier !== Tier.MAYBE);
-
-  const deduped = dedupeResults(filtered);
-
-  // Сортировка: сначала RELIABLE по убыванию балла, потом MAYBE по убыванию балла
-  const tierRank = { [Tier.RELIABLE]: 0, [Tier.MAYBE]: 1, [Tier.HIDE]: 2 };
-  deduped.sort((a, b) => {
-    const diff = tierRank[a._tier] - tierRank[b._tier];
-    if (diff !== 0) return diff;
-    return b._score - a._score;
-  });
-
-  return deduped.map((p) => ({ ...p, _verified: isDomainVerified(p) }));
-}
-
-// Возвращает только ПРОВЕРЕННЫЕ (домен совпадает со страной поиска)
-export function filterVerified(allFiltered) {
-  return allFiltered.filter((p) => p._verified);
-}
-
-// Оставлено для обратной совместимости
-export function dedupeAndFilter(rawItems) {
-  return filterVerified(filterAll(rawItems));
 }
 
 export async function searchAllCountries(model, onProgress) {
@@ -133,21 +137,26 @@ export async function searchAllCountries(model, onProgress) {
     onProgress?.(c, r.status);
     results.push(r);
   }
-  const rawItems = [];
+  
+  const allItems = [];
   const regionStatus = {};
   for (const r of results) {
     regionStatus[r.country] = { status: r.status, message: r.message || null };
-    for (const item of r.items) rawItems.push({ ...item, _country: r.country });
+    for (const item of r.items) allItems.push(item);
   }
-
-  const allFiltered = filterAll(rawItems);
-  const verified = filterVerified(allFiltered);
-
+  
+  // Фильтруем и сортируем
+  const filtered = dedupeAndFilter(allItems);
+  
+  // Разделяем по tier
+  const reliableItems = filtered.filter(p => p.tier === 'RELIABLE').slice(0, 40);
+  const allOtherItems = filtered.filter(p => p.tier !== 'RELIABLE').slice(0, 40);
+  
   return {
-    items: verified.slice(0, 40),
-    totalFound: verified.length,
-    allItems: allFiltered.slice(0, 60),
-    totalFoundAll: allFiltered.length,
+    items: reliableItems,
+    allItems: allOtherItems,
+    totalFound: reliableItems.length,
+    totalFoundAll: allOtherItems.length,
     regionStatus,
   };
 }
