@@ -128,7 +128,10 @@ export function dedupeAndFilter(allItems) {
   });
 }
 
-export async function searchAllCountries(model, onProgress) {
+export async function searchAllCountries function getCurrency(country) {
+  const currencies = { KZ: 'тг', RU: 'руб', CN: '¥', EU: '€' };
+  return currencies[country] || 'тг';
+}(model, onProgress) {
   const countries = ['KZ', 'RU', 'EU', 'CN'];
   const results = [];
   for (const c of countries) {
@@ -151,12 +154,35 @@ export async function searchAllCountries(model, onProgress) {
   // Разделяем по tier
   const reliableItems = filtered.filter(p => p.tier === 'RELIABLE').slice(0, 40);
   const allOtherItems = filtered.filter(p => p.tier !== 'RELIABLE').slice(0, 40);
-  
-  return {
-    items: reliableItems,
-    allItems: allOtherItems,
-    totalFound: reliableItems.length,
-    totalFoundAll: allOtherItems.length,
-    regionStatus,
-  };
-}
+
+  // Форматируем результаты в новый JSON формат
+const formattedItems = reliableItems.map((item, idx) => ({
+  rank: idx + 1,
+  title: item.title,
+  url: item.link,
+  snippet: item.snippet,
+  flag: COUNTRY_META[item._country]?.flag,
+  region: item._country,
+  score: item.score,
+  tier: item.tier,
+  contact: {
+    company_name: item.title.split(' ')[0],
+    phone: null,
+    email: null,
+    website: new URL(item.link).hostname
+  },
+  price: {
+    value: null,
+    currency: getCurrency(item._country),
+    status: "требуется уточнение"
+  },
+  verified: item.tier === 'RELIABLE'
+}));
+
+return {
+  items: formattedItems,
+  allItems: allOtherItems,
+  totalFound: reliableItems.length,
+  totalFoundAll: allOtherItems.length,
+  regionStatus,
+};
