@@ -203,15 +203,19 @@ function NewRequestModal({ onClose, onCreated }) {
     setStage('searching');
     setError(null);
     try {
+      const model = form.model.trim();
+
       const { items, totalFound, allItems, totalFoundAll, regionStatus } = await searchAllCountries(
-        form.model.trim(),
+        model,
         (c, s) => setProgress((p) => ({ ...p, [c]: s }))
       );
-      await createRequest({
+
+      // Автосохранение в БД
+      const requestData = {
         status: 'new',
         claimed_by: null,
         price_quoted: null,
-        model: form.model.trim(),
+        model: model,
         quantity: 1,
         unit: 'шт',
         deadline: 'Не указан',
@@ -220,11 +224,13 @@ function NewRequestModal({ onClose, onCreated }) {
         phone: 'Не указан',
         source: 'Вручную (менеджер)',
         region_status: regionStatus,
-        items,
+        items: items,
         total_found: totalFound,
         all_items: allItems,
         total_found_all: totalFoundAll,
-      });
+      };
+
+      await createRequest(requestData);
       onCreated();
     } catch (err) {
       setError(String(err?.message || err));
