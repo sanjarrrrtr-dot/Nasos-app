@@ -189,15 +189,13 @@ function StatCard({ label, value, accent = '#101a2b' }) {
 /* ---------- Модалка ручного создания заявки ---------- */
 
 function NewRequestModal({ onClose, onCreated }) {
-  const [form, setForm] = useState({
-    model: '', quantity: 1, unit: 'шт', deadline: '', region: '', clientName: '', phone: '',
-  });
+  const [form, setForm] = useState({ model: '' });
   const [stage, setStage] = useState('idle'); // idle | searching | error
   const [progress, setProgress] = useState({});
   const [error, setError] = useState(null);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const canSubmit = form.model.trim() && form.phone.trim() && stage !== 'searching';
+  const canSubmit = form.model.trim() && stage !== 'searching';
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -214,12 +212,12 @@ function NewRequestModal({ onClose, onCreated }) {
         claimed_by: null,
         price_quoted: null,
         model: form.model.trim(),
-        quantity: form.quantity || 1,
-        unit: form.unit,
-        deadline: form.deadline.trim() || 'Не указан',
-        region: form.region.trim() || 'Не указан',
-        client_name: form.clientName.trim() || 'Не указано',
-        phone: form.phone.trim(),
+        quantity: 1,
+        unit: 'шт',
+        deadline: 'Не указан',
+        region: 'Не указан',
+        client_name: 'Не указано',
+        phone: 'Не указан',
         source: 'Вручную (менеджер)',
         region_status: regionStatus,
         items,
@@ -229,7 +227,7 @@ function NewRequestModal({ onClose, onCreated }) {
       });
       onCreated();
     } catch (err) {
-      setError(String(err.message || err));
+      setError(String(err?.message || err));
       setStage('idle');
     }
   }
@@ -244,34 +242,8 @@ function NewRequestModal({ onClose, onCreated }) {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <Field label="Модель насоса" required>
-            <input style={styles.input} value={form.model} onChange={set('model')} disabled={stage === 'searching'} placeholder="Марка / артикул" />
+            <input style={styles.input} value={form.model} onChange={set('model')} disabled={stage === 'searching'} placeholder="Марка / артикул" autoFocus />
           </Field>
-          <div style={styles.row2}>
-            <Field label="Количество" required>
-              <input type="number" min="1" style={styles.input} value={form.quantity} onChange={set('quantity')} disabled={stage === 'searching'} />
-            </Field>
-            <Field label="Единица">
-              <select style={styles.input} value={form.unit} onChange={set('unit')} disabled={stage === 'searching'}>
-                {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </Field>
-          </div>
-          <div style={styles.row2}>
-            <Field label="Срок поставки">
-              <input style={styles.input} value={form.deadline} onChange={set('deadline')} disabled={stage === 'searching'} placeholder="например: до 15 сентября" />
-            </Field>
-            <Field label="Регион доставки">
-              <input style={styles.input} value={form.region} onChange={set('region')} disabled={stage === 'searching'} placeholder="город" />
-            </Field>
-          </div>
-          <div style={styles.row2}>
-            <Field label="Клиент / компания">
-              <input style={styles.input} value={form.clientName} onChange={set('clientName')} disabled={stage === 'searching'} />
-            </Field>
-            <Field label="Телефон" required>
-              <input style={styles.input} value={form.phone} onChange={set('phone')} disabled={stage === 'searching'} placeholder="+7 ..." />
-            </Field>
-          </div>
 
           {error && <div style={styles.errorBanner}>{error}</div>}
 
