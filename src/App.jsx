@@ -89,9 +89,9 @@ export default function App() {
         <div style={styles.page}>
           <div style={styles.statsRow}>
             <StatCard label="Всего заявок" value={stats.total} />
-            <StatCard label="Новые" value={stats.new} accent="#c98a3a" />
-            <StatCard label="Мои в работе" value={stats.mine} accent="#3f6f9e" />
-            <StatCard label="Закрыто" value={stats.closed} accent="#3f7f5c" />
+            <StatCard label="Новые" value={stats.new} accent="#e08a2b" />
+            <StatCard label="Мои в работе" value={stats.mine} accent="#2f6fed" />
+            <StatCard label="Закрыто" value={stats.closed} accent="#1e9e6b" />
           </div>
 
           {errorMsg && (
@@ -177,7 +177,7 @@ function Footer() {
   );
 }
 
-function StatCard({ label, value, accent = '#3a4048' }) {
+function StatCard({ label, value, accent = '#101a2b' }) {
   return (
     <div style={styles.statCard}>
       <div style={{ ...styles.statValue, color: accent }}>{value}</div>
@@ -205,8 +205,9 @@ function NewRequestModal({ onClose, onCreated }) {
     setStage('searching');
     setError(null);
     try {
-      const { items, totalFound, regionStatus } = await searchAllCountries(form.model.trim(), (c, s) =>
-        setProgress((p) => ({ ...p, [c]: s }))
+      const { items, totalFound, allItems, totalFoundAll, regionStatus } = await searchAllCountries(
+        form.model.trim(),
+        (c, s) => setProgress((p) => ({ ...p, [c]: s }))
       );
       await createRequest({
         status: 'new',
@@ -223,6 +224,8 @@ function NewRequestModal({ onClose, onCreated }) {
         region_status: regionStatus,
         items,
         total_found: totalFound,
+        all_items: allItems,
+        total_found_all: totalFoundAll,
       });
       onCreated();
     } catch (err) {
@@ -289,11 +292,11 @@ function NewRequestModal({ onClose, onCreated }) {
 
 function ProgressPill({ country, status }) {
   const meta = COUNTRY_META[country];
-  let label = 'ожидание', color = '#8a94a3';
-  if (status === 'loading') { label = 'поиск…'; color = '#c98a3a'; }
-  if (status === 'ok') { label = 'найдено'; color = '#3f7f5c'; }
-  if (status === 'empty') { label = 'пусто'; color = '#8a94a3'; }
-  if (status === 'error') { label = 'ошибка'; color = '#b5433a'; }
+  let label = 'ожидание', color = '#8a97ab';
+  if (status === 'loading') { label = 'поиск…'; color = '#e08a2b'; }
+  if (status === 'ok') { label = 'найдено'; color = '#1e9e6b'; }
+  if (status === 'empty') { label = 'пусто'; color = '#8a97ab'; }
+  if (status === 'error') { label = 'ошибка'; color = '#e3564c'; }
   return (
     <div style={{ ...styles.progressPill, borderColor: color }}>
       <span>{meta.flag} {meta.label}</span>
@@ -329,17 +332,22 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
   const [costPrice, setCostPrice] = useState(req.cost_price || '');
   const [margin, setMargin] = useState(req.margin || '');
   const [closeReason, setCloseReason] = useState('');
+  const [showAll, setShowAll] = useState(false);
   const claimedByMe = req.claimed_by === activeManager;
   const claimedByOther = req.claimed_by && req.claimed_by !== activeManager;
   const managerName = (id) => MANAGERS.find((m) => m.id === id)?.name || id;
 
   const statusMeta = {
-    new: { label: 'НОВАЯ', color: '#c98a3a' },
-    claimed: { label: 'В РАБОТЕ', color: '#3f6f9e' },
-    closed: { label: 'ЗАКРЫТА', color: '#6b7280' },
-  }[req.status] || { label: req.status, color: '#6b7280' };
+    new: { label: 'НОВАЯ', color: '#e08a2b' },
+    claimed: { label: 'В РАБОТЕ', color: '#2f6fed' },
+    closed: { label: 'ЗАКРЫТА', color: '#8a97ab' },
+  }[req.status] || { label: req.status, color: '#8a97ab' };
 
-  const items = Array.isArray(req.items) ? req.items : [];
+  const items = Array.isArray(req.items) ? req.items : []; // проверенные
+  const allItems = Array.isArray(req.all_items) ? req.all_items : []; // весь пул
+  const verifiedKeys = new Set(items.map((p) => (p.link || p.title || '').toLowerCase()));
+  const extraItems = allItems.filter((p) => !verifiedKeys.has((p.link || p.title || '').toLowerCase()));
+  const totalFoundAll = req.total_found_all ?? allItems.length;
   const regionStatus = req.region_status || {};
 
   // расчёт калькулятора маржи в реальном времени
@@ -367,7 +375,10 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
           </div>
         </div>
         <div style={styles.reqCardTopRight}>
-          <span style={styles.reqFound}>{req.total_found ?? items.length} найдено</span>
+          <span style={styles.reqFound}>
+            {req.total_found ?? items.length} проверено
+            {totalFoundAll > (req.total_found ?? items.length) && ` · ${totalFoundAll} всего`}
+          </span>
           <span style={styles.chevron}>{isOpen ? '▲' : '▼'}</span>
         </div>
       </div>
@@ -458,13 +469,38 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
             <button style={styles.primaryBtnSm} onClick={onClaim}>Взять в работу</button>
           )}
 
-          <div style={styles.itemsList}>
-            {items.length === 0 ? (
-              <div style={styles.emptyItems}>Ничего не найдено ни в одной из стран.</div>
-            ) : (
-              items.map((p, i) => <ProductRow key={i} p={p} index={i} />)
-            )}
+          <div style={styles.resultsSection}>
+            <div style={styles.resultsSectionTitle}>
+              <span>✅ Проверенные поставщики</span>
+              <span style={styles.resultsCountBadgeVerified}>{items.length}</span>
+            </div>
+            <div style={styles.itemsList}>
+              {items.length === 0 ? (
+                <div style={styles.emptyItems}>Ничего проверенного не найдено — посмотрите остальные результаты ниже.</div>
+              ) : (
+                items.map((p, i) => <ProductRow key={i} p={p} index={i} verified />)
+              )}
+            </div>
           </div>
+
+          {extraItems.length > 0 && (
+            <div style={styles.resultsSection}>
+              <div style={styles.resultsSectionHeader} onClick={() => setShowAll((s) => !s)}>
+                <div style={styles.resultsSectionTitle}>
+                  <span>Остальные найденные</span>
+                  <span style={styles.resultsCountBadgeAll}>{extraItems.length}</span>
+                </div>
+                <button style={styles.resultsToggleBtn} onClick={(e) => { e.stopPropagation(); setShowAll((s) => !s); }}>
+                  {showAll ? 'Скрыть ▲' : 'Показать ▼'}
+                </button>
+              </div>
+              {showAll && (
+                <div style={styles.itemsList}>
+                  {extraItems.map((p, i) => <ProductRow key={i} p={p} index={i} verified={false} />)}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -483,10 +519,10 @@ function DetailRow({ label, value }) {
 function RegionBadge({ country, status, message }) {
   const meta = COUNTRY_META[country];
   const cfg = {
-    ok: { label: 'есть результаты', color: '#3f7f5c' },
-    empty: { label: 'ничего не найдено', color: '#8a94a3' },
-    error: { label: message ? `ошибка: ${message}` : 'ошибка', color: '#b5433a' },
-  }[status] || { label: status, color: '#8a94a3' };
+    ok: { label: 'есть результаты', color: '#1e9e6b' },
+    empty: { label: 'ничего не найдено', color: '#8a97ab' },
+    error: { label: message ? `ошибка: ${message}` : 'ошибка', color: '#e3564c' },
+  }[status] || { label: status, color: '#8a97ab' };
   return (
     <div style={{ ...styles.regionBadge, borderColor: cfg.color }} title={cfg.label}>
       <span>{meta?.flag}</span>
@@ -512,19 +548,23 @@ function detectDomainCountry(link) {
   }
 }
 
-function ProductRow({ p, index }) {
+function ProductRow({ p, index, verified }) {
   const meta = COUNTRY_META[p._country];
   const domainCountry = p.link ? detectDomainCountry(p.link) : null;
   const mismatch = domainCountry && domainCountry !== p._country;
+  const rowStyle = verified ? { ...styles.productRow, ...styles.productRowVerified } : styles.productRow;
 
   return (
-    <div style={styles.productRow}>
+    <div style={rowStyle}>
       <div style={styles.productIndex}>{index + 1}</div>
       <div style={styles.productBody}>
-        <div style={styles.productTitle}>{meta?.flag} {p.title || 'Товар'}</div>
+        <div style={styles.productTitle}>
+          {meta?.flag} {p.title || 'Товар'}
+          {verified && <span style={styles.verifiedCheck}>проверено</span>}
+        </div>
         {p.snippet && <div style={styles.productSnippet}>{p.snippet}</div>}
         {p.link && <a href={p.link} target="_blank" rel="noreferrer" style={styles.productLink}>{p.link}</a>}
-        {mismatch && (
+        {!verified && mismatch && (
           <div style={styles.domainWarning}>
             ⚠️ Домен сайта похож на другой регион ({domainCountry}) — проверьте, действительно ли поставщик из {meta?.label}
           </div>
