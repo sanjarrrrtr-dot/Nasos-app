@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   fetchManagers, createManager, updateManager,
   fetchClientGoals, createClientGoal, updateClientGoal, deleteClientGoal, archiveClosedGoals,
-  createPomodoroSession, completePomodoroSession, fetchTodayPomodoros,
+  createPomodoroSession, completePomodoroSession, fetchTodayPomodoros, createSupplier,
 } from './crm.js';
+import { COUNTRY_META, searchAllCountries } from './search.js';
 import { crmStyles as cs, STAGE_META, STAGE_ORDER } from './crmStyles.js';
 import { styles } from './styles.js';
 
@@ -149,6 +150,7 @@ function Dashboard({ manager, onSwitch, onManagerUpdated }) {
   const [loading, setLoading] = useState(true);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [showEditTargets, setShowEditTargets] = useState(false);
+  const [searchGoal, setSearchGoal] = useState(null); // клиент-цель, для которой открыт поиск поставщика
 
   const load = useCallback(async () => {
     const data = await fetchClientGoals(manager.id);
@@ -213,6 +215,7 @@ function Dashboard({ manager, onSwitch, onManagerUpdated }) {
               goals={goals.filter((g) => g.status === stage)}
               onChange={async (id, patch) => { await updateClientGoal(id, patch); load(); }}
               onDelete={async (id) => { await deleteClientGoal(id); load(); }}
+              onFindSupplier={(g) => setSearchGoal(g)}
             />
           ))}
         </div>
@@ -239,6 +242,13 @@ function Dashboard({ manager, onSwitch, onManagerUpdated }) {
           manager={manager}
           onClose={() => setShowEditTargets(false)}
           onSaved={() => { setShowEditTargets(false); onManagerUpdated(); }}
+        />
+      )}
+      {searchGoal && (
+        <SupplierSearchModal
+          goal={searchGoal}
+          onClose={() => setSearchGoal(null)}
+          onAttached={() => { setSearchGoal(null); load(); }}
         />
       )}
     </div>
@@ -293,7 +303,7 @@ function Gauge({ pct }) {
 
 /* ---------- Канбан ---------- */
 
-function StageColumn({ stage, goals, onChange, onDelete }) {
+function StageColumn({ stage, goals, onChange, onDelete, onFindSupplier }) {
   const meta = STAGE_META[stage];
   return (
     <div style={cs.col}>
@@ -302,7 +312,7 @@ function StageColumn({ stage, goals, onChange, onDelete }) {
         <span style={cs.colCount}>{goals.length}</span>
       </div>
       {goals.map((g) => (
-        <GoalCard key={g.id} goal={g} onChange={onChange} onDelete={onDelete} />
+        <GoalCard key={g.id} goal={g} onChange={onChange} onDelete={onDelete} onFindSupplier={onFindSupplier} />
       ))}
     </div>
   );
@@ -310,7 +320,7 @@ function StageColumn({ stage, goals, onChange, onDelete }) {
 
 const DECLINE_REASONS = ['Дорого', 'Нет бюджета', 'Уже есть поставщик', 'Ждёт другой товар', 'Другое'];
 
-function GoalCard({ goal, onChange, onDelete }) {
+function GoalCard({ goal, onChange, onDelete, onFindSupplier }) {
   const [reasonPick, setReasonPick] = useState(goal.rejection_reason || '');
 
   async function handleStageChange(e) {
@@ -332,13 +342,15 @@ function GoalCard({ goal, onChange, onDelete }) {
       <div style={cs.cardName}>{goal.client_name}</div>
       <div style={cs.cardSum}>{amount ? `${money(amount)} ₸` : 'сумма не указана'}</div>
       <div style={cs.cardMeta}>
-        {goal.product_model || 'модель не указана'}{goal.supplier_name ? ` · ${goal.supplier_name}` : ''}
+        {goal.product_model || 'модель не указана'}
+        {goal.supplier_name ? ` · поставщик: ${goal.supplier_name} (${goal.supplier_country || '—'})` : ''}
         {goal.status === 'declined' && goal.rejection_reason ? ` · причина: ${goal.rejection_reason}` : ''}
       </div>
       <div style={cs.cardActions}>
         <select style={cs.stageSelect} value={goal.status} onChange={handleStageChange}>
           {STAGE_ORDER.map((s) => <option key={s} value={s}>{STAGE_META[s].label}</option>)}
         </select>
+        <button style={styles.ghostBtnSm} onClick={() => onFindSupplier(goal)}>🔍 Поставщик</button>
         <button style={cs.smallDangerBtn} onClick={() => { if (confirm('Удалить сделку?')) onDelete(goal.id); }}>✕</button>
       </div>
     </div>
@@ -523,6 +535,127 @@ function PomodoroWidget({ managerId }) {
         ) : (
           <button style={styles.primaryBtnSm} onClick={handleStart}>{onBreak ? 'Начать перерыв' : 'Начать сессию'}</button>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Поиск поставщика (тот же движок, что во вкладке "Заявки") ---------- */
+
+function SupplierSearchModal({ goal, onClose, onAttached }) {
+  const [model, setModel] = useState(goal.product_model || '');
+  const [stage, setStage] = useState('idle'); // idle | searching | done | error
+  const [progress, setProgress] = useState({});
+  const [results, setResults] = useState({ items: [], allItems: [] });
+  const [attachingUrl, setAttachingUrl] = useState(null);
+
+  async function runSearch() {
+    if (!model.trim()) return;
+    setStage('searching');
+    setProgress({});
+    try {
+      const { items, allItems } = await searchAllCountries(model.trim(), (c, s) => setProgress((p) => ({ ...p, [c]: s })));
+      setResults({ items, allItems });
+      setStage('done');
+    } catch (e) {
+      setStage('error');
+    }
+  }
+
+  async function attach(item) {
+    setAttachingUrl(item.url || item.link);
+    try {
+      const contact = item.contact || {};
+      const country = item.region || item._country;
+      const supplierName = contact.company_name || item.title;
+
+      await createSupplier({
+        name: supplierName,
+        country,
+        website: contact.website || null,
+      }).catch(() => null); // справочник поставщиков — best-effort, не блокируем прикрепление если упадёт
+
+      await updateClientGoal(goal.id, {
+        supplier_name: supplierName,
+        supplier_country: country,
+        supplier_contact: contact.website || item.url || item.link || null,
+        status: goal.status === 'new' || goal.status === 'processing' ? 'found' : goal.status,
+      });
+      onAttached();
+    } finally {
+      setAttachingUrl(null);
+    }
+  }
+
+  const allResults = [...results.items, ...results.allItems];
+
+  return (
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={{ ...styles.modalCard, maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
+        <div style={styles.modalHeader}>
+          <strong>Найти поставщика · {goal.client_name}</strong>
+          <button style={styles.modalClose} onClick={onClose}>×</button>
+        </div>
+        <div style={styles.form}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              style={{ ...styles.input, flex: 1 }}
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder="Модель товара, например: ЦНС 300/180"
+            />
+            <button style={styles.primaryBtnSm} onClick={runSearch} disabled={stage === 'searching' || !model.trim()}>
+              {stage === 'searching' ? 'Ищем…' : 'Искать'}
+            </button>
+          </div>
+
+          {stage === 'searching' && (
+            <div style={styles.progressGrid}>
+              {Object.entries(COUNTRY_META).map(([code, meta]) => {
+                const s = progress[code];
+                const color = s === 'ok' ? '#1F9E5C' : s === 'error' ? '#D14A3E' : s === 'loading' ? '#D98A12' : '#9CA9B5';
+                const label = s === 'ok' ? 'найдено' : s === 'empty' ? 'пусто' : s === 'error' ? 'ошибка' : s === 'loading' ? 'поиск…' : 'ожидание';
+                return (
+                  <div key={code} style={{ ...styles.progressPill, borderColor: color }}>
+                    <span>{meta.flag} {meta.label}</span>
+                    <span style={{ color, fontWeight: 600 }}>{label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {stage === 'error' && <div style={styles.errorBanner}>Не удалось выполнить поиск. Попробуйте ещё раз.</div>}
+
+          {stage === 'done' && (
+            <div style={styles.itemsList}>
+              {allResults.length === 0 ? (
+                <div style={styles.emptyItems}>Ничего не найдено ни в одной из стран.</div>
+              ) : (
+                allResults.map((p, i) => {
+                  const url = p.url || p.link;
+                  return (
+                    <div key={i} style={styles.productRow}>
+                      <div style={styles.productIndex}>{i + 1}</div>
+                      <div style={styles.productBody}>
+                        <div style={styles.productTitle}>{p.flag || COUNTRY_META[p._country]?.flag} {p.title || 'Товар'}</div>
+                        {p.snippet && <div style={styles.productSnippet}>{p.snippet}</div>}
+                        {url && <a href={url} target="_blank" rel="noreferrer" style={styles.productLink}>{url}</a>}
+                        <button
+                          style={{ ...styles.primaryBtnSm, marginTop: 8 }}
+                          disabled={attachingUrl === url}
+                          onClick={() => attach(p)}
+                        >
+                          {attachingUrl === url ? 'Сохраняем…' : '+ Прикрепить к сделке'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
