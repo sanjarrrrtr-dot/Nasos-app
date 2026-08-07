@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchRequests, updateRequest, createRequest } from './supabase.js';
-import { COUNTRY_META, searchAllCountries } from './search';
+import { COUNTRY_META, searchAllCountries } from './search.js';
 import { styles } from './styles.js';
+import { crmStyles } from './crmStyles.js';
+import ManagerCabinet from './ManagerCabinet.jsx';
 
 const MANAGERS = [
   { id: '5096937369', name: 'Бекзат' },
@@ -17,6 +19,7 @@ export default function App() {
   const [activeManager, setActiveManager] = useState(() => localStorage.getItem('activeManager') || MANAGERS[0].id);
   const [openId, setOpenId] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [tab, setTab] = useState('requests'); // requests | cabinet
   const pollRef = useRef(null);
 
   const refresh = useCallback(async () => {
@@ -84,48 +87,62 @@ export default function App() {
         setActiveManager={setActiveManager}
         onNewRequest={() => setShowNewForm(true)}
       />
-
-      <div style={styles.body}>
-        <div style={styles.page}>
-          <div style={styles.statsRow}>
-            <StatCard label="Всего заявок" value={stats.total} />
-            <StatCard label="Новые" value={stats.new} accent="#e08a2b" />
-            <StatCard label="Мои в работе" value={stats.mine} accent="#2f6fed" />
-            <StatCard label="Закрыто" value={stats.closed} accent="#1e9e6b" />
-          </div>
-
-          {errorMsg && (
-            <div style={styles.errorBanner}>
-              ⚠️ Не удалось связаться с базой данных: {errorMsg}
-            </div>
-          )}
-
-          {loading ? (
-            <div style={styles.emptyState}>Загрузка заявок…</div>
-          ) : requests.length === 0 ? (
-            <div style={styles.emptyState}>
-              Заявок пока нет. Они появятся здесь автоматически, как только клиент отправит заявку с сайта,
-              или вы можете создать заявку вручную кнопкой выше.
-            </div>
-          ) : (
-            <div style={styles.reqList}>
-              {requests.map((r) => (
-                <RequestCard
-                  key={r.id}
-                  req={r}
-                  activeManager={activeManager}
-                  isOpen={openId === r.id}
-                  onToggle={() => setOpenId(openId === r.id ? null : r.id)}
-                  onClaim={() => handleClaim(r)}
-                  onSetPrice={(p) => handleSetPrice(r, p)}
-                  onSetMargin={(cp, m) => handleSetMargin(r, cp, m)}
-                  onClose={(reason) => handleClose(r, reason)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+      <div style={crmStyles.tabs}>
+        <button style={{ ...crmStyles.tab, ...(tab === 'requests' ? crmStyles.tabActive : {}) }} onClick={() => setTab('requests')}>
+          Заявки
+        </button>
+        <button style={{ ...crmStyles.tab, ...(tab === 'cabinet' ? crmStyles.tabActive : {}) }} onClick={() => setTab('cabinet')}>
+          Мой кабинет
+        </button>
       </div>
+
+      {tab === 'cabinet' ? (
+        <div style={styles.body}>
+          <ManagerCabinet />
+        </div>
+      ) : (
+        <div style={styles.body}>
+          <div style={styles.page}>
+            <div style={styles.statsRow}>
+              <StatCard label="Всего заявок" value={stats.total} />
+              <StatCard label="Новые" value={stats.new} accent="#c98a3a" />
+              <StatCard label="Мои в работе" value={stats.mine} accent="#3f6f9e" />
+              <StatCard label="Закрыто" value={stats.closed} accent="#3f7f5c" />
+            </div>
+
+            {errorMsg && (
+              <div style={styles.errorBanner}>
+                ⚠ Не удалось связаться с базой данных: {errorMsg}
+              </div>
+            )}
+
+            {loading ? (
+              <div style={styles.emptyState}>Загрузка заявок…</div>
+            ) : requests.length === 0 ? (
+              <div style={styles.emptyState}>
+                Заявок пока нет. Они появятся здесь автоматически, как только клиент отправит заявку,
+                или вы можете создать заявку вручную кнопкой выше.
+              </div>
+            ) : (
+              <div style={styles.reqList}>
+                {requests.map((r) => (
+                  <RequestCard
+                    key={r.id}
+                    req={r}
+                    activeManager={activeManager}
+                    isOpen={openId === r.id}
+                    onToggle={() => setOpenId(openId === r.id ? null : r.id)}
+                    onClaim={() => handleClaim(r)}
+                    onSetPrice={(p) => handleSetPrice(r, p)}
+                    onSetMargin={(cp, m) => handleSetMargin(r, cp, m)}
+                    onClose={(reason) => handleClose(r, reason)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {showNewForm && (
         <NewRequestModal
@@ -156,7 +173,11 @@ function TopBar({ activeManager, setActiveManager, onNewRequest }) {
         <button style={styles.primaryBtnSm} onClick={onNewRequest}>
           + Новая заявка
         </button>
-        <select style={styles.managerSelect} value={activeManager} onChange={(e) => setActiveManager(e.target.value)}>
+        <select
+          style={styles.managerSelect}
+          value={activeManager}
+          onChange={(e) => setActiveManager(e.target.value)}
+        >
           {MANAGERS.map((m) => (
             <option key={m.id} value={m.id}>
               {m.name}
@@ -177,7 +198,7 @@ function Footer() {
   );
 }
 
-function StatCard({ label, value, accent = '#101a2b' }) {
+function StatCard({ label, value, accent = '#3a4048' }) {
   return (
     <div style={styles.statCard}>
       <div style={{ ...styles.statValue, color: accent }}>{value}</div>
@@ -189,13 +210,15 @@ function StatCard({ label, value, accent = '#101a2b' }) {
 /* ---------- Модалка ручного создания заявки ---------- */
 
 function NewRequestModal({ onClose, onCreated }) {
-  const [form, setForm] = useState({ model: '' });
+  const [form, setForm] = useState({
+    model: '', quantity: 1, unit: 'шт', deadline: '', region: '', clientName: '', phone: '',
+  });
   const [stage, setStage] = useState('idle'); // idle | searching | error
   const [progress, setProgress] = useState({});
   const [error, setError] = useState(null);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const canSubmit = form.model.trim() && stage !== 'searching';
+  const canSubmit = form.model.trim() && form.phone.trim() && stage !== 'searching';
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -203,36 +226,29 @@ function NewRequestModal({ onClose, onCreated }) {
     setStage('searching');
     setError(null);
     try {
-      // Новый формат из search.js
-      const { items, totalFound, allItems, totalFoundAll, regionStatus } = await searchAllCountries(
+      const { items, totalFound, regionStatus } = await searchAllCountries(
         form.model.trim(),
         (c, s) => setProgress((p) => ({ ...p, [c]: s }))
       );
-      
-      // items теперь содержит новый JSON формат с категориями, контактами, ценами и т.д.
-      // allItems это остальные найденные результаты
-      
       await createRequest({
         status: 'new',
         claimed_by: null,
         price_quoted: null,
         model: form.model.trim(),
-        quantity: 1,
-        unit: 'шт',
-        deadline: 'Не указан',
-        region: 'Не указан',
-        client_name: 'Не указано',
-        phone: 'Не указан',
+        quantity: form.quantity || 1,
+        unit: form.unit,
+        deadline: form.deadline.trim() || 'Не указан',
+        region: form.region.trim() || 'Не указан',
+        client_name: form.clientName.trim() || 'Не указано',
+        phone: form.phone.trim(),
         source: 'Вручную (менеджер)',
         region_status: regionStatus,
-        items: items,  // новый формат с category, contact, price и т.д.
+        items,
         total_found: totalFound,
-        all_items: allItems,  // остальные результаты
-        total_found_all: totalFoundAll,
       });
       onCreated();
     } catch (err) {
-      setError(String(err?.message || err));
+      setError(String(err.message || err));
       setStage('idle');
     }
   }
@@ -244,11 +260,39 @@ function NewRequestModal({ onClose, onCreated }) {
           <span style={styles.eyebrow}>НОВАЯ ЗАЯВКА ВРУЧНУЮ</span>
           <button style={styles.modalClose} onClick={onClose}>×</button>
         </div>
-
         <form onSubmit={handleSubmit} style={styles.form}>
           <Field label="Модель насоса" required>
-            <input style={styles.input} value={form.model} onChange={set('model')} disabled={stage === 'searching'} placeholder="Марка / артикул" autoFocus />
+            <input style={styles.input} value={form.model} onChange={set('model')} disabled={stage === 'searching'} />
           </Field>
+
+          <div style={styles.row2}>
+            <Field label="Количество" required>
+              <input type="number" min="1" style={styles.input} value={form.quantity} onChange={set('quantity')} disabled={stage === 'searching'} />
+            </Field>
+            <Field label="Единица">
+              <select style={styles.input} value={form.unit} onChange={set('unit')} disabled={stage === 'searching'}>
+                {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </Field>
+          </div>
+
+          <div style={styles.row2}>
+            <Field label="Срок поставки">
+              <input style={styles.input} value={form.deadline} onChange={set('deadline')} disabled={stage === 'searching'} />
+            </Field>
+            <Field label="Регион доставки">
+              <input style={styles.input} value={form.region} onChange={set('region')} disabled={stage === 'searching'} />
+            </Field>
+          </div>
+
+          <div style={styles.row2}>
+            <Field label="Клиент / компания">
+              <input style={styles.input} value={form.clientName} onChange={set('clientName')} disabled={stage === 'searching'} />
+            </Field>
+            <Field label="Телефон" required>
+              <input style={styles.input} value={form.phone} onChange={set('phone')} disabled={stage === 'searching'} />
+            </Field>
+          </div>
 
           {error && <div style={styles.errorBanner}>{error}</div>}
 
@@ -258,7 +302,9 @@ function NewRequestModal({ onClose, onCreated }) {
 
           {stage === 'searching' && (
             <div style={styles.progressGrid}>
-              {['KZ', 'RU', 'EU', 'CN'].map((c) => <ProgressPill key={c} country={c} status={progress[c]} />)}
+              {['KZ', 'RU', 'EU', 'CN'].map((c) => (
+                <ProgressPill key={c} country={c} status={progress[c]?.status} />
+              ))}
             </div>
           )}
         </form>
@@ -269,11 +315,11 @@ function NewRequestModal({ onClose, onCreated }) {
 
 function ProgressPill({ country, status }) {
   const meta = COUNTRY_META[country];
-  let label = 'ожидание', color = '#8a97ab';
-  if (status === 'loading') { label = 'поиск…'; color = '#e08a2b'; }
-  if (status === 'ok') { label = 'найдено'; color = '#1e9e6b'; }
-  if (status === 'empty') { label = 'пусто'; color = '#8a97ab'; }
-  if (status === 'error') { label = 'ошибка'; color = '#e3564c'; }
+  let label = 'ожидание', color = '#8a94a3';
+  if (status === 'loading') { label = 'поиск…'; color = '#c98a3a'; }
+  if (status === 'ok') { label = 'найдено'; color = '#3f7f5c'; }
+  if (status === 'empty') { label = 'пусто'; color = '#8a94a3'; }
+  if (status === 'error') { label = 'ошибка'; color = '#b5433a'; }
   return (
     <div style={{ ...styles.progressPill, borderColor: color }}>
       <span>{meta.flag} {meta.label}</span>
@@ -295,10 +341,10 @@ function Field({ label, required, children }) {
 
 const CLOSE_REASONS = [
   { value: 'success', label: '✅ Закрыть сделку (успешно)' },
-  { value: 'cheaper', label: '💸 Нашли дешевле' },
-  { value: 'no_response', label: '🔇 Нет обратной связи' },
-  { value: 'cancelled', label: '🚫 Отменили закуп' },
-  { value: 'competitor', label: '🏳️ Купили у конкурента' },
+  { value: 'cheaper', label: '💰 Нашли дешевле' },
+  { value: 'no_response', label: '🚫 Нет обратной связи' },
+  { value: 'cancelled', label: '⛔ Отменили закуп' },
+  { value: 'competitor', label: '📦 Купили у конкурента' },
   { value: 'tender', label: '📋 Тендерщики' },
   { value: 'no_need', label: '➖ Нет потребности' },
   { value: 'failed', label: '❌ Сделка провалена' },
@@ -309,24 +355,21 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
   const [costPrice, setCostPrice] = useState(req.cost_price || '');
   const [margin, setMargin] = useState(req.margin || '');
   const [closeReason, setCloseReason] = useState('');
-  const [showAll, setShowAll] = useState(false);
+
   const claimedByMe = req.claimed_by === activeManager;
   const claimedByOther = req.claimed_by && req.claimed_by !== activeManager;
   const managerName = (id) => MANAGERS.find((m) => m.id === id)?.name || id;
 
   const statusMeta = {
-    new: { label: 'НОВАЯ', color: '#e08a2b' },
-    claimed: { label: 'В РАБОТЕ', color: '#2f6fed' },
-    closed: { label: 'ЗАКРЫТА', color: '#8a97ab' },
-  }[req.status] || { label: req.status, color: '#8a97ab' };
+    new: { label: 'НОВАЯ', color: '#c98a3a' },
+    claimed: { label: 'В РАБОТЕ', color: '#3f6f9e' },
+    closed: { label: 'ЗАКРЫТА', color: '#6b7280' },
+  }[req.status] || { label: req.status, color: '#6b7280' };
 
   const items = Array.isArray(req.items) ? req.items : [];
-  const allItems = Array.isArray(req.all_items) ? req.all_items : [];
-  const verifiedKeys = new Set(items.map((p) => (p.link || p.title || '').toLowerCase()));
-  const extraItems = allItems.filter((p) => !verifiedKeys.has((p.link || p.title || '').toLowerCase()));
-  const totalFoundAll = req.total_found_all ?? allItems.length;
   const regionStatus = req.region_status || {};
 
+  // расчёт калькулятора маржи в реальном времени
   const cp = parseFloat(costPrice) || 0;
   const m = parseFloat(margin) || 0;
   const subtotal = cp + m;
@@ -351,10 +394,7 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
           </div>
         </div>
         <div style={styles.reqCardTopRight}>
-          <span style={styles.reqFound}>
-            {req.total_found ?? items.length} проверено
-            {totalFoundAll > (req.total_found ?? items.length) && ` · ${totalFoundAll} всего`}
-          </span>
+          <span style={styles.reqFound}>{req.total_found ?? items.length} найдено</span>
           <span style={styles.chevron}>{isOpen ? '▲' : '▼'}</span>
         </div>
       </div>
@@ -365,7 +405,7 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
             <DetailRow label="Телефон" value={req.phone} />
             <DetailRow label="Срок поставки" value={req.deadline} />
             <DetailRow label="Подана" value={new Date(req.created_at).toLocaleString('ru-RU')} />
-            <DetailRow label="Ведёт" value={req.claimed_by ? managerName(req.claimed_by) : '— никто пока не взял —'} />
+            <DetailRow label="Ведёт" value={req.claimed_by ? managerName(req.claimed_by) : '—'} />
           </div>
 
           <div style={styles.regionRow}>
@@ -379,7 +419,7 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
           )}
 
           {claimedByOther ? (
-            <div style={styles.claimedNotice}>⚠️ Эту заявку уже ведёт {managerName(req.claimed_by)}.</div>
+            <div style={styles.claimedNotice}>⚠ Эту заявку уже ведёт {managerName(req.claimed_by)}</div>
           ) : (
             claimedByMe && req.status !== 'closed' && (
               <div style={styles.marginCalc}>
@@ -407,10 +447,10 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
 
                 {(cp > 0 || m > 0) && (
                   <div style={styles.calcBreakdown}>
-                    <div style={styles.calcRow}><span>Закупка + маржа</span><span>{subtotal.toLocaleString('ru-RU')} тг</span></div>
-                    <div style={styles.calcRow}><span>НДС 16%</span><span>{Math.round(vat).toLocaleString('ru-RU')} тг</span></div>
-                    <div style={styles.calcRowTotal}><span>Итого клиенту</span><span>{Math.round(totalWithVat).toLocaleString('ru-RU')} тг</span></div>
-                    <div style={styles.calcRowEarn}><span>Ваш заработок (20%)</span><span>{Math.round(managerEarnings).toLocaleString('ru-RU')} тг</span></div>
+                    <div style={styles.calcRow}><span>Закупка + маржа</span><span>{subtotal.toLocaleString('ru-RU')}</span></div>
+                    <div style={styles.calcRow}><span>НДС 16%</span><span>{Math.round(vat).toLocaleString('ru-RU')}</span></div>
+                    <div style={styles.calcRowTotal}><span>Итого клиенту</span><span>{Math.round(totalWithVat).toLocaleString('ru-RU')}</span></div>
+                    <div style={styles.calcRowEarn}><span>Ваш заработок (20%)</span><span>{Math.round(managerEarnings).toLocaleString('ru-RU')}</span></div>
                   </div>
                 )}
 
@@ -419,7 +459,7 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
                 </button>
 
                 {req.price_quoted && (
-                  <div style={styles.priceTag}>Цена клиенту: <strong>{Number(req.price_quoted).toLocaleString('ru-RU')} тг</strong></div>
+                  <div style={styles.priceTag}>Цена клиенту: <strong>{Number(req.price_quoted).toLocaleString('ru-RU')}</strong></div>
                 )}
 
                 <div style={styles.closeRow}>
@@ -445,38 +485,13 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
             <button style={styles.primaryBtnSm} onClick={onClaim}>Взять в работу</button>
           )}
 
-          <div style={styles.resultsSection}>
-            <div style={styles.resultsSectionTitle}>
-              <span>✅ Проверенные поставщики</span>
-              <span style={styles.resultsCountBadgeVerified}>{items.length}</span>
-            </div>
-            <div style={styles.itemsList}>
-              {items.length === 0 ? (
-                <div style={styles.emptyItems}>Ничего проверенного не найдено — посмотрите остальные результаты ниже.</div>
-              ) : (
-                items.map((p, i) => <ProductRow key={i} p={p} index={i} verified />)
-              )}
-            </div>
+          <div style={styles.itemsList}>
+            {items.length === 0 ? (
+              <div style={styles.emptyItems}>Ничего не найдено ни в одной из стран.</div>
+            ) : (
+              items.map((p, i) => <ProductRow key={i} p={p} index={i} />)
+            )}
           </div>
-
-          {extraItems.length > 0 && (
-            <div style={styles.resultsSection}>
-              <div style={styles.resultsSectionHeader} onClick={() => setShowAll((s) => !s)}>
-                <div style={styles.resultsSectionTitle}>
-                  <span>Остальные найденные</span>
-                  <span style={styles.resultsCountBadgeAll}>{extraItems.length}</span>
-                </div>
-                <button style={styles.resultsToggleBtn} onClick={(e) => { e.stopPropagation(); setShowAll((s) => !s); }}>
-                  {showAll ? 'Скрыть ▲' : 'Показать ▼'}
-                </button>
-              </div>
-              {showAll && (
-                <div style={styles.itemsList}>
-                  {extraItems.map((p, i) => <ProductRow key={i} p={p} index={i} verified={false} />)}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -495,10 +510,10 @@ function DetailRow({ label, value }) {
 function RegionBadge({ country, status, message }) {
   const meta = COUNTRY_META[country];
   const cfg = {
-    ok: { label: 'есть результаты', color: '#1e9e6b' },
-    empty: { label: 'ничего не найдено', color: '#8a97ab' },
-    error: { label: message ? `ошибка: ${message}` : 'ошибка', color: '#e3564c' },
-  }[status] || { label: status, color: '#8a97ab' };
+    ok: { label: 'есть результаты', color: '#3f7f5c' },
+    empty: { label: 'ничего не найдено', color: '#8a94a3' },
+    error: { label: message ? `ошибка: ${message}` : 'ошибка', color: '#b5433a' },
+  }[status] || { label: status, color: '#8a94a3' };
   return (
     <div style={{ ...styles.regionBadge, borderColor: cfg.color }} title={cfg.label}>
       <span>{meta?.flag}</span>
@@ -507,44 +522,15 @@ function RegionBadge({ country, status, message }) {
   );
 }
 
-const DOMAIN_TO_COUNTRY = {
-  kz: 'KZ', ru: 'RU', by: 'RU', de: 'EU', eu: 'EU', it: 'EU', fr: 'EU', pl: 'EU', es: 'EU',
-  cn: 'CN', 'com.cn': 'CN',
-};
-
-function detectDomainCountry(link) {
-  try {
-    const host = new URL(link).hostname.toLowerCase();
-    const parts = host.split('.');
-    const tld2 = parts.slice(-2).join('.');
-    const tld1 = parts[parts.length - 1];
-    return DOMAIN_TO_COUNTRY[tld2] || DOMAIN_TO_COUNTRY[tld1] || null;
-  } catch {
-    return null;
-  }
-}
-
-function ProductRow({ p, index, verified }) {
+function ProductRow({ p, index }) {
   const meta = COUNTRY_META[p._country];
-  const domainCountry = p.link ? detectDomainCountry(p.link) : null;
-  const mismatch = domainCountry && domainCountry !== p._country;
-  const rowStyle = verified ? { ...styles.productRow, ...styles.productRowVerified } : styles.productRow;
-
   return (
-    <div style={rowStyle}>
+    <div style={styles.productRow}>
       <div style={styles.productIndex}>{index + 1}</div>
       <div style={styles.productBody}>
-        <div style={styles.productTitle}>
-          {meta?.flag} {p.title || 'Товар'}
-          {verified && <span style={styles.verifiedCheck}>проверено</span>}
-        </div>
+        <div style={styles.productTitle}>{meta?.flag} {p.title || 'Товар'}</div>
         {p.snippet && <div style={styles.productSnippet}>{p.snippet}</div>}
         {p.link && <a href={p.link} target="_blank" rel="noreferrer" style={styles.productLink}>{p.link}</a>}
-        {!verified && mismatch && (
-          <div style={styles.domainWarning}>
-            ⚠️ Домен сайта похож на другой регион ({domainCountry}) — проверьте, действительно ли поставщик из {meta?.label}
-          </div>
-        )}
       </div>
     </div>
   );
