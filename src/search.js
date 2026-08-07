@@ -14,7 +14,11 @@
 
 import { scoreResult, Tier } from './searchFilters.js';
 
-const SERPER_KEY = '37e15324b8adf3b2e1e2536ac9e0459ac3cc7d2d';
+// Ключ Serper больше НЕ хранится во фронтенде — запросы идут через
+// Supabase Edge Function "serper-search", которая держит ключ на сервере
+// (Supabase Dashboard → Edge Functions → Secrets → SERPER_KEY).
+const SEARCH_PROXY_URL = 'https://wmnsmqzxjmyaxblltngh.supabase.co/functions/v1/serper-search';
+const SUPABASE_ANON_KEY = 'sb_publishable_Qznq_X8F17UR2fNrVIzFmA_MasgDTyQ'; // публичный ключ, это ок
 
 export const COUNTRY_META = {
   KZ: { flag: '🇰🇿', label: 'Казахстан', gl: 'kz', hl: 'ru' },
@@ -109,9 +113,9 @@ function getCurrency(country) {
 export async function searchCountry(country, model) {
   const meta = COUNTRY_META[country];
   try {
-    const res = await fetch('https://google.serper.dev/search', {
+    const res = await fetch(SEARCH_PROXY_URL, {
       method: 'POST',
-      headers: { 'X-API-KEY': SERPER_KEY, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
       body: JSON.stringify({ q: buildQuery(country, model), gl: meta.gl, hl: meta.hl, num: 20 }),
     });
     const data = await res.json();
