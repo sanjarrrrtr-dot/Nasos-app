@@ -118,3 +118,18 @@ export function fetchTodayPomodoros(managerId) {
   const today = new Date().toISOString().slice(0, 10);
   return req(`/pomodoro_sessions?select=*&manager_id=eq.${managerId}&work_date=eq.${today}&order=start_time.asc`);
 }
+
+/* ---------- Поставщики ---------- */
+
+export function createSupplier({ name, country, contactName, contactPhone, website }) {
+  return req('/suppliers', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({
+      name, country,
+      contact_name: contactName || null,
+      contact_phone: contactPhone || null,
+      website: website || null,
+    }),
+  });
+}
