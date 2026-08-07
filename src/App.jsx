@@ -203,19 +203,20 @@ function NewRequestModal({ onClose, onCreated }) {
     setStage('searching');
     setError(null);
     try {
-      const model = form.model.trim();
-
+      // Новый формат из search.js
       const { items, totalFound, allItems, totalFoundAll, regionStatus } = await searchAllCountries(
-        model,
+        form.model.trim(),
         (c, s) => setProgress((p) => ({ ...p, [c]: s }))
       );
-
-      // Автосохранение в БД
-      const requestData = {
+      
+      // items теперь содержит новый JSON формат с категориями, контактами, ценами и т.д.
+      // allItems это остальные найденные результаты
+      
+      await createRequest({
         status: 'new',
         claimed_by: null,
         price_quoted: null,
-        model: model,
+        model: form.model.trim(),
         quantity: 1,
         unit: 'шт',
         deadline: 'Не указан',
@@ -224,13 +225,11 @@ function NewRequestModal({ onClose, onCreated }) {
         phone: 'Не указан',
         source: 'Вручную (менеджер)',
         region_status: regionStatus,
-        items: items,
+        items: items,  // новый формат с category, contact, price и т.д.
         total_found: totalFound,
-        all_items: allItems,
+        all_items: allItems,  // остальные результаты
         total_found_all: totalFoundAll,
-      };
-
-      await createRequest(requestData);
+      });
       onCreated();
     } catch (err) {
       setError(String(err?.message || err));
@@ -321,14 +320,13 @@ function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice
     closed: { label: 'ЗАКРЫТА', color: '#8a97ab' },
   }[req.status] || { label: req.status, color: '#8a97ab' };
 
-  const items = Array.isArray(req.items) ? req.items : []; // проверенные
-  const allItems = Array.isArray(req.all_items) ? req.all_items : []; // весь пул
+  const items = Array.isArray(req.items) ? req.items : [];
+  const allItems = Array.isArray(req.all_items) ? req.all_items : [];
   const verifiedKeys = new Set(items.map((p) => (p.link || p.title || '').toLowerCase()));
   const extraItems = allItems.filter((p) => !verifiedKeys.has((p.link || p.title || '').toLowerCase()));
   const totalFoundAll = req.total_found_all ?? allItems.length;
   const regionStatus = req.region_status || {};
 
-  // расчёт калькулятора маржи в реальном времени
   const cp = parseFloat(costPrice) || 0;
   const m = parseFloat(margin) || 0;
   const subtotal = cp + m;
