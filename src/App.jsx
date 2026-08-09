@@ -1,537 +1,175 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchRequests, updateRequest, createRequest } from './supabase.js';
-import { COUNTRY_META, searchAllCountries } from './search.js';
-import { styles } from './styles.js';
-import { crmStyles } from './crmStyles.js';
-import ManagerCabinet from './ManagerCabinet.jsx';
+import React, { useState } from 'react';
+import { searchAndClassify } from './search.js';
 
-const MANAGERS = [
-  { id: '5096937369', name: 'Бекзат' },
-  { id: '7922348304', name: 'STS PROM' },
+const COUNTRIES = [
+  { code: 'KZ', flag: '🇰🇿', name: 'Казахстан' },
+  { code: 'RU', flag: '🇷🇺', name: 'Россия' },
+  { code: 'CN', flag: '🇨🇳', name: 'Китай' },
+  { code: 'EU', flag: '🇪🇺', name: 'Европа' },
 ];
 
-const UNITS = ['шт', 'компл', 'кг', 'тонны', 'литры', 'м'];
+const S = {
+  page: { minHeight: '100vh', background: '#EEF3F8', color: '#1B2733', fontFamily: '"IBM Plex Sans", -apple-system, sans-serif' },
+  topbar: { display: 'flex', alignItems: 'center', gap: 14, padding: '18px 32px', background: '#fff', boxShadow: '0 1px 0 rgba(20,40,70,0.06)' },
+  mark: { width: 38, height: 38, borderRadius: 12, background: 'linear-gradient(135deg,#2E7DF2,#14B8A3)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15 },
+  brand: { fontWeight: 700, fontSize: 15 },
+  brandSub: { fontSize: 12, color: '#6B7A8A' },
+  hero: { maxWidth: 720, margin: '0 auto', padding: '56px 20px 20px', textAlign: 'center' },
+  h1: { fontSize: 30, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 10 },
+  heroP: { fontSize: 14.5, color: '#6B7A8A', marginBottom: 30 },
+  searchRow: { display: 'flex', gap: 10, maxWidth: 640, margin: '0 auto 8px' },
+  input: { flex: 1, fontFamily: 'inherit', fontSize: 16, padding: '16px 20px', border: '1.5px solid #E3E9F0', borderRadius: 16, background: '#fff', color: '#1B2733' },
+  btn: { fontFamily: 'inherit', fontSize: 15, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#2E7DF2,#14B8A3)', border: 'none', borderRadius: 16, padding: '0 26px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(46,125,242,0.28)', whiteSpace: 'nowrap' },
+  hint: { textAlign: 'center', fontSize: 12, color: '#9CA9B5', marginBottom: 36 },
+  wrap: { maxWidth: 720, margin: '0 auto', padding: '0 20px 80px' },
+  progressGrid: { display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 34 },
+  progressPill: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, fontSize: 11.5, padding: '12px 6px', borderRadius: 12, background: '#fff', border: '1.5px solid #E3E9F0' },
+  countrySection: { marginBottom: 34 },
+  countryHead: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 },
+  countryHeadName: { fontSize: 15, fontWeight: 700 },
+  countryHeadLine: { flex: 1, height: 1, background: '#E3E9F0' },
+  groupLabel: { fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#9CA9B5', margin: '14px 0 8px' },
+  card: { display: 'block', background: '#fff', border: '1px solid #E3E9F0', borderRadius: 16, padding: '16px 18px', marginBottom: 10, textDecoration: 'none', color: 'inherit', boxShadow: '0 2px 8px rgba(20,40,70,0.05)' },
+  cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 8 },
+  cardName: { fontSize: 14.5, fontWeight: 600 },
+  badgeFactory: { fontSize: 11, fontWeight: 700, borderRadius: 100, padding: '4px 11px', whiteSpace: 'nowrap', flexShrink: 0, background: '#E6F8EE', color: '#1F9E5C', border: '1px solid #BFE8D1' },
+  badgeDealer: { fontSize: 11, fontWeight: 700, borderRadius: 100, padding: '4px 11px', whiteSpace: 'nowrap', flexShrink: 0, background: '#FBF1DF', color: '#D98A12', border: '1px solid #F0D9A8' },
+  snippet: { fontSize: 13, color: '#6B7A8A', lineHeight: 1.5, marginBottom: 10 },
+  cardBottom: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center' },
+  cardLink: { fontSize: 12.5, color: '#2E7DF2', fontWeight: 600 },
+  empty: { textAlign: 'center', padding: '50px 20px', color: '#6B7A8A', fontSize: 14, background: '#fff', border: '1.5px dashed #E3E9F0', borderRadius: 18 },
+  errorBanner: { background: '#FBEAE8', color: '#D14A3E', borderRadius: 12, padding: '12px 16px', fontSize: 13, marginBottom: 20 },
+  footer: { textAlign: 'center', fontSize: 11.5, color: '#9CA9B5', padding: 20 },
+};
 
 export default function App() {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [activeManager, setActiveManager] = useState(() => localStorage.getItem('activeManager') || MANAGERS[0].id);
-  const [openId, setOpenId] = useState(null);
-  const [showNewForm, setShowNewForm] = useState(false);
-  const [tab, setTab] = useState('requests'); // requests | cabinet
-  const pollRef = useRef(null);
-
-  const refresh = useCallback(async () => {
-    try {
-      const data = await fetchRequests();
-      setRequests(data);
-      setErrorMsg(null);
-    } catch (e) {
-      setErrorMsg(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh();
-    pollRef.current = setInterval(refresh, 5000);
-    return () => clearInterval(pollRef.current);
-  }, [refresh]);
-
-  useEffect(() => {
-    localStorage.setItem('activeManager', activeManager);
-  }, [activeManager]);
-
-  async function handleClaim(req) {
-    if (req.claimed_by && req.claimed_by !== activeManager) return;
-    await updateRequest(req.id, { claimed_by: activeManager, status: 'claimed' });
-    refresh();
-  }
-
-  async function handleSetPrice(req, price) {
-    await updateRequest(req.id, { price_quoted: price });
-    refresh();
-  }
-
-  async function handleSetMargin(req, costPrice, margin) {
-    const cp = parseFloat(costPrice) || 0;
-    const m = parseFloat(margin) || 0;
-    const subtotal = cp + m;
-    const withVat = subtotal * 1.16;
-    await updateRequest(req.id, {
-      cost_price: cp,
-      margin: m,
-      price_quoted: withVat ? String(Math.round(withVat)) : null,
-    });
-    refresh();
-  }
-
-  async function handleClose(req, reason) {
-    await updateRequest(req.id, { status: 'closed', close_reason: reason });
-    refresh();
-  }
-
-  const stats = {
-    total: requests.length,
-    new: requests.filter((r) => r.status === 'new').length,
-    mine: requests.filter((r) => r.claimed_by === activeManager && r.status !== 'closed').length,
-    closed: requests.filter((r) => r.status === 'closed').length,
-  };
-
-  return (
-    <div style={styles.shell}>
-      <TopBar
-        activeManager={activeManager}
-        setActiveManager={setActiveManager}
-        onNewRequest={() => setShowNewForm(true)}
-      />
-      <div style={crmStyles.tabs}>
-        <button style={{ ...crmStyles.tab, ...(tab === 'requests' ? crmStyles.tabActive : {}) }} onClick={() => setTab('requests')}>
-          Заявки
-        </button>
-        <button style={{ ...crmStyles.tab, ...(tab === 'cabinet' ? crmStyles.tabActive : {}) }} onClick={() => setTab('cabinet')}>
-          Мой кабинет
-        </button>
-      </div>
-
-      {tab === 'cabinet' ? (
-        <div style={styles.body}>
-          <ManagerCabinet />
-        </div>
-      ) : (
-        <div style={styles.body}>
-          <div style={styles.page}>
-            <div style={styles.statsRow}>
-              <StatCard label="Всего заявок" value={stats.total} />
-              <StatCard label="Новые" value={stats.new} accent="#c98a3a" />
-              <StatCard label="Мои в работе" value={stats.mine} accent="#3f6f9e" />
-              <StatCard label="Закрыто" value={stats.closed} accent="#3f7f5c" />
-            </div>
-
-            {errorMsg && (
-              <div style={styles.errorBanner}>
-                ⚠ Не удалось связаться с базой данных: {errorMsg}
-              </div>
-            )}
-
-            {loading ? (
-              <div style={styles.emptyState}>Загрузка заявок…</div>
-            ) : requests.length === 0 ? (
-              <div style={styles.emptyState}>
-                Заявок пока нет. Они появятся здесь автоматически, как только клиент отправит заявку,
-                или вы можете создать заявку вручную кнопкой выше.
-              </div>
-            ) : (
-              <div style={styles.reqList}>
-                {requests.map((r) => (
-                  <RequestCard
-                    key={r.id}
-                    req={r}
-                    activeManager={activeManager}
-                    isOpen={openId === r.id}
-                    onToggle={() => setOpenId(openId === r.id ? null : r.id)}
-                    onClaim={() => handleClaim(r)}
-                    onSetPrice={(p) => handleSetPrice(r, p)}
-                    onSetMargin={(cp, m) => handleSetMargin(r, cp, m)}
-                    onClose={(reason) => handleClose(r, reason)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {showNewForm && (
-        <NewRequestModal
-          onClose={() => setShowNewForm(false)}
-          onCreated={() => {
-            setShowNewForm(false);
-            refresh();
-          }}
-        />
-      )}
-
-      <Footer />
-    </div>
-  );
-}
-
-function TopBar({ activeManager, setActiveManager, onNewRequest }) {
-  return (
-    <header style={styles.topbar}>
-      <div style={styles.brandBlock}>
-        <div style={styles.brandMark}>Н</div>
-        <div>
-          <div style={styles.brandName}>NASOSPROM</div>
-          <div style={styles.brandSub}>Кабинет менеджера</div>
-        </div>
-      </div>
-      <div style={styles.topbarRight}>
-        <button style={styles.primaryBtnSm} onClick={onNewRequest}>
-          + Новая заявка
-        </button>
-        <select
-          style={styles.managerSelect}
-          value={activeManager}
-          onChange={(e) => setActiveManager(e.target.value)}
-        >
-          {MANAGERS.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </select>
-      </div>
-    </header>
-  );
-}
-
-function Footer() {
-  return (
-    <footer style={styles.footer}>
-      <span>NASOSPROM · КАБИНЕТ МЕНЕДЖЕРА</span>
-      <span>ДАННЫЕ: SUPABASE · ПОИСК: SERPER.DEV</span>
-    </footer>
-  );
-}
-
-function StatCard({ label, value, accent = '#3a4048' }) {
-  return (
-    <div style={styles.statCard}>
-      <div style={{ ...styles.statValue, color: accent }}>{value}</div>
-      <div style={styles.statLabel}>{label}</div>
-    </div>
-  );
-}
-
-/* ---------- Модалка ручного создания заявки ---------- */
-
-function NewRequestModal({ onClose, onCreated }) {
-  const [form, setForm] = useState({
-    model: '', quantity: 1, unit: 'шт', deadline: '', region: '', clientName: '', phone: '',
-  });
-  const [stage, setStage] = useState('idle'); // idle | searching | error
+  const [model, setModel] = useState('');
+  const [status, setStatus] = useState('idle'); // idle | searching | done | error
   const [progress, setProgress] = useState({});
-  const [error, setError] = useState(null);
+  const [grouped, setGrouped] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const canSubmit = form.model.trim() && form.phone.trim() && stage !== 'searching';
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!canSubmit) return;
-    setStage('searching');
-    setError(null);
+  async function runSearch() {
+    if (!model.trim() || status === 'searching') return;
+    setStatus('searching');
+    setProgress({});
+    setGrouped(null);
+    setErrorMsg('');
     try {
-      const { items, totalFound, regionStatus } = await searchAllCountries(
-        form.model.trim(),
-        (c, s) => setProgress((p) => ({ ...p, [c]: s }))
-      );
-      await createRequest({
-        status: 'new',
-        claimed_by: null,
-        price_quoted: null,
-        model: form.model.trim(),
-        quantity: form.quantity || 1,
-        unit: form.unit,
-        deadline: form.deadline.trim() || 'Не указан',
-        region: form.region.trim() || 'Не указан',
-        client_name: form.clientName.trim() || 'Не указано',
-        phone: form.phone.trim(),
-        source: 'Вручную (менеджер)',
-        region_status: regionStatus,
-        items,
-        total_found: totalFound,
+      const result = await searchAndClassify(model.trim(), (code, s) => {
+        setProgress((p) => ({ ...p, [code]: s }));
       });
-      onCreated();
-    } catch (err) {
-      setError(String(err.message || err));
-      setStage('idle');
+      setGrouped(result);
+      setStatus('done');
+    } catch (e) {
+      setErrorMsg(String(e.message || e));
+      setStatus('error');
     }
   }
 
-  return (
-    <div style={styles.modalOverlay} onClick={onClose}>
-      <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-        <div style={styles.modalHeader}>
-          <span style={styles.eyebrow}>НОВАЯ ЗАЯВКА ВРУЧНУЮ</span>
-          <button style={styles.modalClose} onClick={onClose}>×</button>
-        </div>
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <Field label="Модель насоса" required>
-            <input style={styles.input} value={form.model} onChange={set('model')} disabled={stage === 'searching'} />
-          </Field>
-
-          <div style={styles.row2}>
-            <Field label="Количество" required>
-              <input type="number" min="1" style={styles.input} value={form.quantity} onChange={set('quantity')} disabled={stage === 'searching'} />
-            </Field>
-            <Field label="Единица">
-              <select style={styles.input} value={form.unit} onChange={set('unit')} disabled={stage === 'searching'}>
-                {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </Field>
-          </div>
-
-          <div style={styles.row2}>
-            <Field label="Срок поставки">
-              <input style={styles.input} value={form.deadline} onChange={set('deadline')} disabled={stage === 'searching'} />
-            </Field>
-            <Field label="Регион доставки">
-              <input style={styles.input} value={form.region} onChange={set('region')} disabled={stage === 'searching'} />
-            </Field>
-          </div>
-
-          <div style={styles.row2}>
-            <Field label="Клиент / компания">
-              <input style={styles.input} value={form.clientName} onChange={set('clientName')} disabled={stage === 'searching'} />
-            </Field>
-            <Field label="Телефон" required>
-              <input style={styles.input} value={form.phone} onChange={set('phone')} disabled={stage === 'searching'} />
-            </Field>
-          </div>
-
-          {error && <div style={styles.errorBanner}>{error}</div>}
-
-          <button type="submit" style={{ ...styles.primaryBtn, opacity: canSubmit ? 1 : 0.5 }} disabled={!canSubmit}>
-            {stage === 'searching' ? 'Идёт поиск…' : 'Найти и сохранить заявку'}
-          </button>
-
-          {stage === 'searching' && (
-            <div style={styles.progressGrid}>
-              {['KZ', 'RU', 'EU', 'CN'].map((c) => (
-                <ProgressPill key={c} country={c} status={progress[c]?.status} />
-              ))}
-            </div>
-          )}
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function ProgressPill({ country, status }) {
-  const meta = COUNTRY_META[country];
-  let label = 'ожидание', color = '#8a94a3';
-  if (status === 'loading') { label = 'поиск…'; color = '#c98a3a'; }
-  if (status === 'ok') { label = 'найдено'; color = '#3f7f5c'; }
-  if (status === 'empty') { label = 'пусто'; color = '#8a94a3'; }
-  if (status === 'error') { label = 'ошибка'; color = '#b5433a'; }
-  return (
-    <div style={{ ...styles.progressPill, borderColor: color }}>
-      <span>{meta.flag} {meta.label}</span>
-      <span style={{ color, fontWeight: 600 }}>{label}</span>
-    </div>
-  );
-}
-
-function Field({ label, required, children }) {
-  return (
-    <label style={styles.field}>
-      <span style={styles.fieldLabel}>{label} {required && <span style={styles.req}>*</span>}</span>
-      {children}
-    </label>
-  );
-}
-
-/* ---------- Карточка заявки ---------- */
-
-const CLOSE_REASONS = [
-  { value: 'success', label: '✅ Закрыть сделку (успешно)' },
-  { value: 'cheaper', label: '💰 Нашли дешевле' },
-  { value: 'no_response', label: '🚫 Нет обратной связи' },
-  { value: 'cancelled', label: '⛔ Отменили закуп' },
-  { value: 'competitor', label: '📦 Купили у конкурента' },
-  { value: 'tender', label: '📋 Тендерщики' },
-  { value: 'no_need', label: '➖ Нет потребности' },
-  { value: 'failed', label: '❌ Сделка провалена' },
-];
-
-function RequestCard({ req, activeManager, isOpen, onToggle, onClaim, onSetPrice, onSetMargin, onClose }) {
-  const [priceInput, setPriceInput] = useState(req.price_quoted || '');
-  const [costPrice, setCostPrice] = useState(req.cost_price || '');
-  const [margin, setMargin] = useState(req.margin || '');
-  const [closeReason, setCloseReason] = useState('');
-
-  const claimedByMe = req.claimed_by === activeManager;
-  const claimedByOther = req.claimed_by && req.claimed_by !== activeManager;
-  const managerName = (id) => MANAGERS.find((m) => m.id === id)?.name || id;
-
-  const statusMeta = {
-    new: { label: 'НОВАЯ', color: '#c98a3a' },
-    claimed: { label: 'В РАБОТЕ', color: '#3f6f9e' },
-    closed: { label: 'ЗАКРЫТА', color: '#6b7280' },
-  }[req.status] || { label: req.status, color: '#6b7280' };
-
-  const items = Array.isArray(req.items) ? req.items : [];
-  const regionStatus = req.region_status || {};
-
-  // расчёт калькулятора маржи в реальном времени
-  const cp = parseFloat(costPrice) || 0;
-  const m = parseFloat(margin) || 0;
-  const subtotal = cp + m;
-  const vat = subtotal * 0.16;
-  const totalWithVat = subtotal + vat;
-  const managerEarnings = totalWithVat * 0.2;
-
-  const closeReasonLabel = CLOSE_REASONS.find((r) => r.value === req.close_reason)?.label;
+  const hasAnyResults = grouped && COUNTRIES.some((c) => grouped[c.code].factory.length || grouped[c.code].dealer.length);
 
   return (
-    <div style={{ ...styles.reqCard, opacity: req.status === 'closed' ? 0.6 : 1 }}>
-      <div style={styles.reqCardTop} onClick={onToggle}>
-        <div style={styles.reqCardTopLeft}>
-          <span style={{ ...styles.statusTag, borderColor: statusMeta.color, color: statusMeta.color }}>
-            {statusMeta.label}
-          </span>
-          <div>
-            <div style={styles.reqModel}>{req.model}</div>
-            <div style={styles.reqMeta}>
-              {req.quantity} {req.unit} · {req.region} · {req.client_name}
-            </div>
-          </div>
-        </div>
-        <div style={styles.reqCardTopRight}>
-          <span style={styles.reqFound}>{req.total_found ?? items.length} найдено</span>
-          <span style={styles.chevron}>{isOpen ? '▲' : '▼'}</span>
+    <div style={S.page}>
+      <div style={S.topbar}>
+        <div style={S.mark}>N</div>
+        <div>
+          <div style={S.brand}>NASOSPROM</div>
+          <div style={S.brandSub}>поиск поставщиков насосного оборудования</div>
         </div>
       </div>
 
-      {isOpen && (
-        <div style={styles.reqCardBody}>
-          <div style={styles.detailGrid}>
-            <DetailRow label="Телефон" value={req.phone} />
-            <DetailRow label="Срок поставки" value={req.deadline} />
-            <DetailRow label="Подана" value={new Date(req.created_at).toLocaleString('ru-RU')} />
-            <DetailRow label="Ведёт" value={req.claimed_by ? managerName(req.claimed_by) : '—'} />
-          </div>
+      <div style={S.hero}>
+        <div style={S.h1}>Найти насос</div>
+        <div style={S.heroP}>Модель, марка или характеристики — покажем заводы и крупных поставщиков по Казахстану, России, Китаю и Европе</div>
+      </div>
 
-          <div style={styles.regionRow}>
-            {Object.entries(regionStatus).map(([c, s]) => (
-              <RegionBadge key={c} country={c} status={s.status} message={s.message} />
-            ))}
-          </div>
+      <div style={S.searchRow}>
+        <input
+          style={S.input}
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && runSearch()}
+          placeholder="Например: Grundfos CR 15-4 или насос 100 л/с, напор 80 м"
+        />
+        <button style={{ ...S.btn, opacity: status === 'searching' ? 0.6 : 1 }} onClick={runSearch} disabled={status === 'searching'}>
+          {status === 'searching' ? 'Ищем…' : 'Найти насос'}
+        </button>
+      </div>
+      <div style={S.hint}>Только заводы, дилеры, дистрибьюторы и крупные поставщики. Посредники и частные объявления убираем.</div>
 
-          {req.status === 'closed' && closeReasonLabel && (
-            <div style={styles.closedReasonTag}>{closeReasonLabel}</div>
-          )}
-
-          {claimedByOther ? (
-            <div style={styles.claimedNotice}>⚠ Эту заявку уже ведёт {managerName(req.claimed_by)}</div>
-          ) : (
-            claimedByMe && req.status !== 'closed' && (
-              <div style={styles.marginCalc}>
-                <div style={styles.marginCalcTitle}>Калькулятор маржи</div>
-                <div style={styles.row2}>
-                  <Field label="Закупочная цена у поставщика">
-                    <input
-                      type="number"
-                      style={styles.input}
-                      placeholder="например: 1000000"
-                      value={costPrice}
-                      onChange={(e) => setCostPrice(e.target.value)}
-                    />
-                  </Field>
-                  <Field label="Ваша маржа (вкл. доставку)">
-                    <input
-                      type="number"
-                      style={styles.input}
-                      placeholder="например: 500000"
-                      value={margin}
-                      onChange={(e) => setMargin(e.target.value)}
-                    />
-                  </Field>
+      <div style={S.wrap}>
+        {status === 'searching' && (
+          <div style={S.progressGrid}>
+            {COUNTRIES.map((c) => {
+              const s = progress[c.code];
+              const map = { loading: ['поиск…', '#D98A12'], ok: ['готово', '#1F9E5C'], empty: ['пусто', '#9CA9B5'], error: ['ошибка', '#D14A3E'] };
+              const [label, color] = map[s] || ['ожидание', '#9CA9B5'];
+              return (
+                <div key={c.code} style={{ ...S.progressPill, borderColor: color }}>
+                  <span style={{ fontSize: 18 }}>{c.flag}</span>
+                  <span>{c.name}</span>
+                  <span style={{ color, fontWeight: 600 }}>{label}</span>
                 </div>
+              );
+            })}
+            <div style={{ ...S.progressPill, borderColor: progress.classify === 'ok' ? '#1F9E5C' : progress.classify === 'error' ? '#D14A3E' : '#D98A12' }}>
+              <span style={{ fontSize: 18 }}>🤖</span>
+              <span>Проверка</span>
+              <span style={{ fontWeight: 600 }}>{progress.classify === 'ok' ? 'готово' : progress.classify === 'error' ? 'ошибка' : 'анализ…'}</span>
+            </div>
+          </div>
+        )}
 
-                {(cp > 0 || m > 0) && (
-                  <div style={styles.calcBreakdown}>
-                    <div style={styles.calcRow}><span>Закупка + маржа</span><span>{subtotal.toLocaleString('ru-RU')}</span></div>
-                    <div style={styles.calcRow}><span>НДС 16%</span><span>{Math.round(vat).toLocaleString('ru-RU')}</span></div>
-                    <div style={styles.calcRowTotal}><span>Итого клиенту</span><span>{Math.round(totalWithVat).toLocaleString('ru-RU')}</span></div>
-                    <div style={styles.calcRowEarn}><span>Ваш заработок (20%)</span><span>{Math.round(managerEarnings).toLocaleString('ru-RU')}</span></div>
-                  </div>
-                )}
+        {status === 'error' && <div style={S.errorBanner}>⚠ Не удалось выполнить поиск: {errorMsg}</div>}
 
-                <button style={styles.primaryBtnSm} onClick={() => onSetMargin(costPrice, margin)}>
-                  Сохранить расчёт
-                </button>
+        {status === 'done' && !hasAnyResults && (
+          <div style={S.empty}>Ничего не найдено ни в одной из стран. Попробуйте изменить формулировку модели.</div>
+        )}
 
-                {req.price_quoted && (
-                  <div style={styles.priceTag}>Цена клиенту: <strong>{Number(req.price_quoted).toLocaleString('ru-RU')}</strong></div>
-                )}
-
-                <div style={styles.closeRow}>
-                  <select style={styles.input} value={closeReason} onChange={(e) => setCloseReason(e.target.value)}>
-                    <option value="">— выбрать причину закрытия —</option>
-                    {CLOSE_REASONS.map((r) => (
-                      <option key={r.value} value={r.value}>{r.label}</option>
-                    ))}
-                  </select>
-                  <button
-                    style={{ ...styles.dangerBtnSm, opacity: closeReason ? 1 : 0.5 }}
-                    disabled={!closeReason}
-                    onClick={() => onClose(closeReason)}
-                  >
-                    Закрыть заявку
-                  </button>
-                </div>
+        {status === 'done' && hasAnyResults && COUNTRIES.map((c) => {
+          const data = grouped[c.code];
+          if (!data.factory.length && !data.dealer.length) return null;
+          return (
+            <div key={c.code} style={S.countrySection}>
+              <div style={S.countryHead}>
+                <span style={{ fontSize: 20 }}>{c.flag}</span>
+                <span style={S.countryHeadName}>{c.name}</span>
+                <span style={S.countryHeadLine} />
               </div>
-            )
-          )}
-
-          {!claimedByOther && !req.claimed_by && (
-            <button style={styles.primaryBtnSm} onClick={onClaim}>Взять в работу</button>
-          )}
-
-          <div style={styles.itemsList}>
-            {items.length === 0 ? (
-              <div style={styles.emptyItems}>Ничего не найдено ни в одной из стран.</div>
-            ) : (
-              items.map((p, i) => <ProductRow key={i} p={p} index={i} />)
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DetailRow({ label, value }) {
-  return (
-    <div style={styles.detailRow}>
-      <span style={styles.detailLabel}>{label}</span>
-      <span style={styles.detailValue}>{value}</span>
-    </div>
-  );
-}
-
-function RegionBadge({ country, status, message }) {
-  const meta = COUNTRY_META[country];
-  const cfg = {
-    ok: { label: 'есть результаты', color: '#3f7f5c' },
-    empty: { label: 'ничего не найдено', color: '#8a94a3' },
-    error: { label: message ? `ошибка: ${message}` : 'ошибка', color: '#b5433a' },
-  }[status] || { label: status, color: '#8a94a3' };
-  return (
-    <div style={{ ...styles.regionBadge, borderColor: cfg.color }} title={cfg.label}>
-      <span>{meta?.flag}</span>
-      <span style={{ color: cfg.color }}>{cfg.label}</span>
-    </div>
-  );
-}
-
-function ProductRow({ p, index }) {
-  const meta = COUNTRY_META[p._country];
-  return (
-    <div style={styles.productRow}>
-      <div style={styles.productIndex}>{index + 1}</div>
-      <div style={styles.productBody}>
-        <div style={styles.productTitle}>{meta?.flag} {p.title || 'Товар'}</div>
-        {p.snippet && <div style={styles.productSnippet}>{p.snippet}</div>}
-        {p.link && <a href={p.link} target="_blank" rel="noreferrer" style={styles.productLink}>{p.link}</a>}
+              {data.factory.length > 0 && (
+                <>
+                  <div style={S.groupLabel}>Заводы-производители</div>
+                  {data.factory.map((item, i) => <ResultCard key={i} item={item} badgeStyle={S.badgeFactory} />)}
+                </>
+              )}
+              {data.dealer.length > 0 && (
+                <>
+                  <div style={S.groupLabel}>Дилеры / дистрибьюторы / крупные поставщики</div>
+                  {data.dealer.map((item, i) => <ResultCard key={i} item={item} badgeStyle={S.badgeDealer} />)}
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
+
+      <div style={S.footer}>NASOSPROM · поиск поставщиков</div>
     </div>
+  );
+}
+
+function ResultCard({ item, badgeStyle }) {
+  return (
+    <a href={item.url} target="_blank" rel="noreferrer" style={S.card}>
+      <div style={S.cardTop}>
+        <span style={S.cardName}>{item.title}</span>
+        <span style={badgeStyle}>{item.typeLabel}</span>
+      </div>
+      {item.snippet && <div style={S.snippet}>{item.snippet}</div>}
+      <div style={S.cardBottom}>
+        <span style={S.cardLink}>Перейти на сайт →</span>
+      </div>
+    </a>
   );
 }
