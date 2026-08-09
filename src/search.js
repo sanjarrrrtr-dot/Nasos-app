@@ -98,10 +98,10 @@ function scoreReliability(url, country) {
 }
 
 function buildQuery(country, model) {
-  if (country === 'KZ') return `насос ${model} завод OR производитель OR дилер OR дистрибьютор -посредник -перекупщик Казахстан`;
-  if (country === 'RU') return `насос ${model} завод OR производитель OR дилер OR дистрибьютор -посредник -перекупщик Россия`;
-  if (country === 'EU') return `pump ${model} manufacturer OR dealer OR distributor -reseller -broker Europe`;
-  if (country === 'CN') return `${model} 泵 制造商 OR 经销商 OR 代理商 -中间商`;
+  if (country === 'KZ') return `насос ${model} завод дилер дистрибьютор Казахстан`;
+  if (country === 'RU') return `насос ${model} завод дилер дистрибьютор Россия`;
+  if (country === 'EU') return `pump ${model} manufacturer dealer distributor Europe`;
+  if (country === 'CN') return `${model} 泵 制造商 经销商`;
   return model;
 }
 
