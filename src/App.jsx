@@ -1,39 +1,4 @@
-import React, { useState } from ‘react’;
-import { searchAndClassify } from ‘./search.js’;
-
-const COUNTRIES = [
-{ code: ‘KZ’, flag: ‘🇰🇿’, name: ‘Казахстан’ },
-{ code: ‘RU’, flag: ‘🇷🇺’, name: ‘Россия’ },
-{ code: ‘CN’, flag: ‘🇨🇳’, name: ‘Китай’ },
-{ code: ‘EU’, flag: ‘🇪🇺’, name: ‘Европа’ },
-];
-
-const S = {
-page: { minHeight: ‘100vh’, background: ‘#EEF3F8’, color: ‘#1B2733’, fontFamily: ‘“IBM Plex Sans”, -apple-system, sans-serif’ },
-topbar: { display: ‘flex’, alignItems: ‘center’, gap: 14, padding: ‘18px 32px’, background: ‘#fff’, boxShadow: ‘0 1px 0 rgba(20,40,70,0.06)’ },
-mark: { width: 38, height: 38, borderRadius: 12, background: ‘linear-gradient(135deg,#2E7DF2,#14B8A3)’, color: ‘#fff’, display: ‘flex’, alignItems: ‘center’, justifyContent: ‘center’, fontWeight: 700, fontSize: 15 },
-brand: { fontWeight: 700, fontSize: 15 },
-brandSub: { fontSize: 12, color: ‘#6B7A8A’ },
-hero: { maxWidth: 720, margin: ‘0 auto’, padding: ‘56px 20px 20px’, textAlign: ‘center’ },
-h1: { fontSize: 30, fontWeight: 700, letterSpacing: ‘-0.01em’, marginBottom: 10 },
-heroP: { fontSize: 14.5, color: ‘#6B7A8A’, marginBottom: 30 },
-searchRow: { display: ‘flex’, gap: 10, maxWidth: 640, margin: ‘0 auto 8px’ },
-input: { flex: 1, fontFamily: ‘inherit’, fontSize: 16, padding: ‘16px 20px’, border: ‘1.5px solid #E3E9F0’, borderRadius: 16, background: ‘#fff’, color: ‘#1B2733’ },
-btn: { fontFamily: ‘inherit’, fontSize: 15, fontWeight: 700, color: ‘#fff’, background: ‘linear-gradient(135deg,#2E7DF2,#14B8A3)’, border: ‘none’, borderRadius: 16, padding: ‘0 26px’, cursor: ‘pointer’, boxShadow: ‘0 4px 14px rgba(46,125,242,0.28)’, whiteSpace: ‘nowrap’ },
-hint: { textAlign: ‘center’, fontSize: 12, color: ‘#9CA9B5’, marginBottom: 36 },
-wrap: { maxWidth: 720, margin: ‘0 auto’, padding: ‘0 20px 80px’ },
-progressGrid: { display: ‘grid’, gridTemplateColumns: ‘repeat(5,1fr)’, gap: 8, marginBottom: 34 },
-progressPill: { display: ‘flex’, flexDirection: ‘column’, alignItems: ‘center’, gap: 6, fontSize: 11.5, padding: ‘12px 6px’, borderRadius: 12, background: ‘#fff’, border: ‘1.5px solid #E3E9F0’ },
-countrySection: { marginBottom: 34 },
-countryHead: { display: ‘flex’, alignItems: ‘center’, gap: 10, marginBottom: 14 },
-countryHeadName: { fontSize: 15, fontWeight: 700 },
-countryHeadLine: { flex: 1, height: 1, background: ‘#E3E9F0’ },
-groupLabel: { fontSize: 11, fontWeight: 700, letterSpacing: ‘0.05em’, textTransform: ‘uppercase’, color: ‘#9CA9B5’, margin: ‘14px 0 8px’ },
-card: { display: ‘block’, background: ‘#fff’, border: ‘1px solid #E3E9F0’, borderRadius: 16, padding: ‘16px 18px’, marginBottom: 10, textDecoration: ‘none’, color: ‘inherit’, boxShadow: ‘0 2px 8px rgba(20,40,70,0.05)’ },
-cardTop: { display: ‘flex’, justifyContent: ‘space-between’, alignItems: ‘flex-start’, gap: 12, marginBottom: 8 },
-cardName: { fontSize: 14.5, fontWeight: 600 },
-badgeFactory: { fontSize: 11, fontWeight: 700, borderRadius: 100, padding: ‘4px 11px’, whiteSpace: ‘nowrap’, flexShrink: 0, background: ‘#E6F8EE’, color: ‘#1F9E5C’, border: ‘1px solid #BFE8D1’ },
-badgeDealer: { fontSize: 11, fontWeight: 700, borderRadius: 100, padding: ‘4px 11px’, whiteSpace: ‘nowrap’, flexShrink: 0, background: ‘#FBF1DF’, color: ‘#D98A12’, border: ‘1px solid #F0D9A8’ },
+fontSize: 11, fontWeight: 700, borderRadius: 100, padding: ‘4px 11px’, whiteSpace: ‘nowrap’, flexShrink: 0, background: ‘#FBF1DF’, color: ‘#D98A12’, border: ‘1px solid #F0D9A8’ },
 snippet: { fontSize: 13, color: ‘#6B7A8A’, lineHeight: 1.5, marginBottom: 10 },
 cardBottom: { display: ‘flex’, justifyContent: ‘flex-end’, alignItems: ‘center’ },
 cardLink: { fontSize: 12.5, color: ‘#2E7DF2’, fontWeight: 600 },
