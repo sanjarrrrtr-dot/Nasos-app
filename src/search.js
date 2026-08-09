@@ -21,7 +21,7 @@ import { scoreResult, Tier } from './searchFilters.js';
 // Ключи не хранятся во фронтенде — запросы идут через Supabase Edge Functions,
 // которые держат ключи на сервере (Supabase Dashboard → Edge Functions → Secrets).
 const SEARCH_PROXY_URL = 'https://wmnsmqzxjmyaxblltngh.supabase.co/functions/v1/serper-search';
-const CLASSIFY_PROXY_URL = 'https://wmnsmqzxjmyaxblltngh.supabase.co/functions/v1/classify-suppliers';
+const CLASSIFY_PROXY_URL = 'https://wmnsmqzxjmyaxblltngh.supabase.co/functions/v1/quick-task';
 const SUPABASE_ANON_KEY = 'sb_publishable_Qznq_X8F17UR2fNrVIzFmA_MasgDTyQ'; // публичный ключ, это ок
 
 export const COUNTRY_META = {
