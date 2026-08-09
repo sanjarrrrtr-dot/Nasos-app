@@ -1,34 +1,30 @@
 // search.js
-// Объединяет три системы фильтрации:
+// Объединяет две системы скоринга:
 //   1) Собственная простая система (score/tier: RELIABLE/MEDIUM/LOW) —
-//      используется для приоритета стран (KZ/RU/CN/EU) и для отсева
+//      используется для приоритета стран (KZ/RU/EU/CN) и для отсева
 //      явно известных плохих хостов (KNOWN_LOW_QUALITY).
 //   2) Балльная система из searchFilters.js (_score/_tier/_label/_reasons) —
 //      более точная, отлавливает мусор (Wikipedia, госсайты, маркетплейсы,
 //      агрегаторы, запчасти), который своя система не видит.
-//   3) LLM-классификация через Claude API (classify-suppliers Edge Function) —
-//      понимает СМЫСЛ сайта: завод / дилер / дистрибьютор / крупный поставщик /
-//      посредник / частное лицо. Это то, чего эвристики 1 и 2 не могут дать.
 //
-// Результат считается мусором и убирается, если ЛЮБАЯ из систем считает
-// его мусором:
+// Результат считается мусором и убирается, если ЛЮБАЯ из двух систем
+// считает его мусором:
 //   - своя система: хост из KNOWN_LOW_QUALITY (явный чёрный список)
 //   - searchFilters.js: _tier === Tier.HIDE
-//   - LLM: _llmType === 'посредник' или 'частное_лицо'
 
 import { scoreResult, Tier } from './searchFilters.js';
 
-// Ключи не хранятся во фронтенде — запросы идут через Supabase Edge Functions,
-// которые держат ключи на сервере (Supabase Dashboard → Edge Functions → Secrets).
+// Ключ Serper больше НЕ хранится во фронтенде — запросы идут через
+// Supabase Edge Function "serper-search", которая держит ключ на сервере
+// (Supabase Dashboard → Edge Functions → Secrets → SERPER_KEY).
 const SEARCH_PROXY_URL = 'https://wmnsmqzxjmyaxblltngh.supabase.co/functions/v1/serper-search';
-const CLASSIFY_PROXY_URL = 'https://wmnsmqzxjmyaxblltngh.supabase.co/functions/v1/quick-task';
 const SUPABASE_ANON_KEY = 'sb_publishable_Qznq_X8F17UR2fNrVIzFmA_MasgDTyQ'; // публичный ключ, это ок
 
 export const COUNTRY_META = {
   KZ: { flag: '🇰🇿', label: 'Казахстан', gl: 'kz', hl: 'ru' },
   RU: { flag: '🇷🇺', label: 'Россия', gl: 'ru', hl: 'ru' },
-  CN: { flag: '🇨🇳', label: 'Китай', gl: 'cn', hl: 'zh-cn' },
   EU: { flag: '🇪🇺', label: 'Европа', gl: 'de', hl: 'en' },
+  CN: { flag: '🇨🇳', label: 'Китай', gl: 'cn', hl: 'zh-cn' },
 };
 
 const BAD_WORDS = ['посредник', 'перекупщик', 'reseller', 'broker', '中间商'];
@@ -52,47 +48,48 @@ const KNOWN_LOW_QUALITY = [
   'avelinprom', 'hydroalliance', 'nasosclub', 'nt-rt', 'teplosnab',
 ];
 
-// Домены, которые сразу режем на уровне запроса (маркетплейсы, объявления)
-const EXCLUDE_DOMAINS_BY_COUNTRY = {
-  KZ: ['avito.ru', 'olx.kz', 'satu.kz', 'kaspi.kz'],
-  RU: ['avito.ru', 'ozon.ru', 'wildberries.ru'],
-  CN: ['alibaba.com/product-detail'],
-  EU: [],
-};
-
 /**
  * Своя простая система скоринга.
  * @returns {{score:number, tier:'RELIABLE'|'MEDIUM'|'LOW', isJunk:boolean}}
+ *   isJunk === true только если хост явно в чёрном списке KNOWN_LOW_QUALITY —
+ *   это единственный сигнал "мусор" в собственной системе. Обычное
+ *   несовпадение домена со страной даёт tier LOW, но НЕ isJunk (мы не хотим
+ *   резать такие результаты только из-за этого).
  */
 function scoreReliability(url, country) {
   let score = 0;
   const hostname = new URL(url).hostname.toLowerCase();
 
+  // Проверяем известные надёжные бренды
   if (KNOWN_RELIABLE_HOSTS.some(h => hostname.includes(h))) {
-    score += 100;
+    score += 100; // очень надёжные
     return { score, tier: 'RELIABLE', isJunk: false };
   }
 
+  // Проверяем известный мусор
   if (KNOWN_LOW_QUALITY.some(kw => hostname.includes(kw))) {
     score = 10;
     return { score, tier: 'LOW', isJunk: true };
   }
 
+  // Проверяем домен по стране
   const validDomains = RELIABLE_DOMAINS[country] || [];
   const tld = '.' + hostname.split('.').pop();
   if (validDomains.includes(tld)) {
-    score += 60;
+    score += 60; // хороший домен по стране
   } else {
-    score += 20;
+    score += 20; // не совпадает с доменом страны
   }
 
+  // Штрафы за подозрительные признаки
   if (hostname.includes('alibaba') || hostname.includes('aliexpress')) {
-    score -= 10;
+    score -= 10; // китайские маркетплейсы — среднее качество
   }
   if (hostname.length > 40 || hostname.includes('temp') || hostname.includes('shop')) {
-    score -= 5;
+    score -= 5; // подозрительные хосты
   }
 
+  // Определяем tier по score
   let tier = 'LOW';
   if (score >= 60) tier = 'RELIABLE';
   else if (score >= 30) tier = 'MEDIUM';
@@ -100,17 +97,11 @@ function scoreReliability(url, country) {
   return { score, tier, isJunk: false };
 }
 
-// Запрос: модель в кавычках (точное совпадение) + минус-домены вместо минус-слов
 function buildQuery(country, model) {
-  const q = `"${model}"`;
-  const excludeDomains = (EXCLUDE_DOMAINS_BY_COUNTRY[country] || [])
-    .map(d => `-site:${d}`)
-    .join(' ');
-
-  if (country === 'KZ') return `${q} насос (завод OR дилер OR дистрибьютор) Казахстан ${excludeDomains}`;
-  if (country === 'RU') return `${q} насос (завод OR дилер OR дистрибьютор) Россия ${excludeDomains}`;
-  if (country === 'EU') return `${q} pump (manufacturer OR dealer OR distributor) Europe ${excludeDomains}`;
-  if (country === 'CN') return `${q} pump manufacturer OR supplier ${excludeDomains}`;
+  if (country === 'KZ') return `насос ${model} завод OR производитель OR дилер OR дистрибьютор -посредник -перекупщик Казахстан`;
+  if (country === 'RU') return `насос ${model} завод OR производитель OR дилер OR дистрибьютор -посредник -перекупщик Россия`;
+  if (country === 'EU') return `pump ${model} manufacturer OR dealer OR distributor -reseller -broker Europe`;
+  if (country === 'CN') return `${model} 泵 制造商 OR 经销商 OR 代理商 -中间商`;
   return model;
 }
 
@@ -133,6 +124,7 @@ export async function searchCountry(country, model) {
     }
     const items = Array.isArray(data.organic) ? data.organic : [];
 
+    // Прогоняем каждый результат через ОБЕ системы скоринга
     const itemsWithScore = items.map((item) => {
       const own = scoreReliability(item.link, country);
 
@@ -147,9 +139,11 @@ export async function searchCountry(country, model) {
       return {
         ...item,
         _country: country,
+        // своя система (приоритет стран, как раньше)
         score: own.score,
         tier: own.tier,
         _ownJunk: own.isJunk,
+        // балльная система из searchFilters.js
         _score: filt.score,
         _tier: filt.tier,
         _label: filt.label,
@@ -165,40 +159,19 @@ export async function searchCountry(country, model) {
   }
 }
 
-/**
- * Отправляет пачку результатов в Claude API (через Edge Function
- * classify-suppliers) и получает тип поставщика для каждого URL.
- * Режется на чанки по 20 внутри самой функции — здесь просто один вызов.
- */
-async function classifyBatch(items) {
-  if (!items.length) return [];
-  const payload = items.map(i => ({ url: i.link, title: i.title, snippet: i.snippet }));
-  try {
-    const res = await fetch(CLASSIFY_PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
-      body: JSON.stringify({ items: payload }),
-    });
-    const data = await res.json();
-    return data.results || [];
-  } catch (err) {
-    console.error('classifyBatch failed:', err);
-    return []; // при сбое просто не классифицируем — старые фильтры продолжат работать
-  }
-}
-
 export function dedupeAndFilter(allItems) {
   const seen = new Set();
-  const priority = { KZ: 1, RU: 2, CN: 3, EU: 4 };
+  const priority = { KZ: 1, CN: 2, RU: 3, EU: 4 };
 
   const filtered = allItems
+    // старые стоп-слова
     .filter((p) => {
       const text = ((p.title || '') + ' ' + (p.snippet || '')).toLowerCase();
       return !BAD_WORDS.some((w) => text.includes(w));
     })
-    // мусор по любой из трёх систем (своя / searchFilters / LLM)
+    // мусор по ЛЮБОЙ из двух систем
     .filter((p) => !p._ownJunk && p._tier !== Tier.HIDE)
-    .filter((p) => !['посредник', 'частное_лицо'].includes(p._llmType))
+    // дедупликация по ссылке/заголовку
     .filter((p) => {
       const key = (p.link || p.title || '').toLowerCase();
       if (seen.has(key)) return false;
@@ -206,6 +179,7 @@ export function dedupeAndFilter(allItems) {
       return true;
     });
 
+  // Сортируем по приоритету страны + надёжности (своя tier-система)
   return filtered.sort((a, b) => {
     const tierOrder = { RELIABLE: 0, MEDIUM: 1, LOW: 2 };
     const tierDiff = (tierOrder[a.tier] || 2) - (tierOrder[b.tier] || 2);
@@ -214,6 +188,13 @@ export function dedupeAndFilter(allItems) {
   });
 }
 
+/**
+ * Форматирует итоговые элементы для сохранения в Supabase.
+ * Использует реально существующие поля после объединения систем:
+ *   label   <- item._label   (из searchFilters.js)
+ *   reasons <- item._reasons (из searchFilters.js)
+ * Больше нет undefined-полей.
+ */
 export function formatResultsForSupabase(items) {
   return items.map((item, idx) => ({
     rank: idx + 1,
@@ -226,8 +207,6 @@ export function formatResultsForSupabase(items) {
     tier: item.tier,
     label: item._label,
     reasons: item._reasons,
-    supplierType: item._llmType || null,
-    supplierTypeConfidence: item._llmConfidence || 0,
     contact: {
       company_name: item.title.split(' ')[0],
       phone: null,
@@ -243,7 +222,45 @@ export function formatResultsForSupabase(items) {
   }));
 }
 
-export async function searchAllCountries(model, onProgress) {
+const CLASSIFY_URL = 'https://wmnsmqzxjmyaxblltngh.supabase.co/functions/v1/classify-suppliers';
+
+// Порядок стран и порядок типов внутри страны — как хочет клиент:
+// сначала заводы, потом дилеры/дистрибьюторы/крупные поставщики.
+const COUNTRY_ORDER = ['KZ', 'RU', 'CN', 'EU'];
+const TYPE_TO_GROUP = {
+  завод: 'factory',
+  дилер: 'dealer',
+  дистрибьютор: 'dealer',
+  крупный_поставщик: 'dealer',
+};
+const TYPE_LABEL = {
+  завод: 'Завод',
+  дилер: 'Дилер',
+  дистрибьютор: 'Дистрибьютор',
+  крупный_поставщик: 'Крупный поставщик',
+};
+// Эти категории клиент просил убирать полностью — не показываем вообще.
+const REJECTED_TYPES = ['посредник', 'частное_лицо'];
+
+async function classifySuppliers(items) {
+  if (!items.length) return [];
+  const payload = items.map((it) => ({ url: it.link, title: it.title, snippet: it.snippet }));
+  const res = await fetch(CLASSIFY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: payload }),
+  });
+  if (!res.ok) throw new Error('classify-suppliers error: ' + res.status);
+  const data = await res.json();
+  return data.results || [];
+}
+
+/**
+ * Полный пайплайн: поиск по 4 странам → отсев явного мусора (старые фильтры) →
+ * LLM-классификация (завод/дилер/дистрибьютор/крупный поставщик/посредник/частное лицо) →
+ * группировка по странам (KZ→RU→CN→EU) и по типу (заводы сверху).
+ */
+export async function searchAndClassify(model, onProgress) {
   const countries = ['KZ', 'RU', 'CN', 'EU'];
   const results = [];
   for (const c of countries) {
@@ -254,33 +271,43 @@ export async function searchAllCountries(model, onProgress) {
   }
 
   const allItems = [];
-  const regionStatus = {};
-  for (const r of results) {
-    regionStatus[r.country] = { status: r.status, message: r.message || null };
-    for (const item of r.items) allItems.push(item);
+  for (const r of results) for (const item of r.items) allItems.push(item);
+
+  // Старый отсев явного мусора (Wikipedia, госсайты, дубликаты) — оставляем,
+  // это дёшево и снижает количество элементов, которые пойдут в LLM.
+  const preFiltered = dedupeAndFilter(allItems).slice(0, 60); // ограничиваем, чтобы не жечь токены зря
+
+  onProgress?.('classify', 'loading');
+  let classified = [];
+  try {
+    classified = await classifySuppliers(preFiltered);
+  } catch (e) {
+    onProgress?.('classify', 'error');
+    throw e;
+  }
+  onProgress?.('classify', 'ok');
+
+  const typeByUrl = new Map(classified.map((c) => [c.url, c]));
+
+  const grouped = {};
+  for (const code of COUNTRY_ORDER) grouped[code] = { factory: [], dealer: [] };
+
+  for (const item of preFiltered) {
+    const cls = typeByUrl.get(item.link);
+    if (!cls || REJECTED_TYPES.includes(cls.type)) continue;
+    const group = TYPE_TO_GROUP[cls.type];
+    if (!group) continue;
+    const country = item._country;
+    if (!grouped[country]) continue;
+
+    grouped[country][group].push({
+      title: item.title,
+      url: item.link,
+      snippet: item.snippet,
+      typeLabel: TYPE_LABEL[cls.type],
+      confidence: cls.confidence,
+    });
   }
 
-  // Классификация через Claude API — понимает смысл сайта
-  const classified = await classifyBatch(allItems);
-  const typeByUrl = new Map(classified.map(c => [c.url, c]));
-  allItems.forEach(item => {
-    const c = typeByUrl.get(item.link);
-    item._llmType = c?.type || null;
-    item._llmConfidence = c?.confidence || 0;
-  });
-
-  const filtered = dedupeAndFilter(allItems);
-
-  const reliableItems = filtered.filter((p) => p.tier === 'RELIABLE').slice(0, 40);
-  const allOtherItems = filtered.filter((p) => p.tier !== 'RELIABLE').slice(0, 40);
-
-  const formattedItems = formatResultsForSupabase(reliableItems);
-
-  return {
-    items: formattedItems,
-    allItems: allOtherItems,
-    totalFound: reliableItems.length,
-    totalFoundAll: allOtherItems.length,
-    regionStatus,
-  };
+  return grouped;
 }
