@@ -371,7 +371,13 @@ export async function searchAndClassify(model, onProgress) {
     let hostname = '';
     try { hostname = new URL(item.link).hostname.replace(/^www\./, ''); } catch {}
     let realRegion = guessRegionFromDomain(hostname);
-    if (!realRegion) realRegion = guessRegionFromPhone(cls.phone);
+    
+    // ИСПРАВЛЕНИЕ: если домен не определил, пробуем телефон ТОЛЬКО если домен .com или другой неинформативный
+    const isFuzzyDomain = /\.(com|net|org|info|biz)$/i.test(hostname);
+    if (!realRegion && isFuzzyDomain) {
+      realRegion = guessRegionFromPhone(cls.phone);
+    }
+    
     let country = item._country;
     if (realRegion) {
       if (COUNTRY_ORDER.includes(realRegion)) {
