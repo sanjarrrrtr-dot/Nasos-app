@@ -14,6 +14,9 @@
   <meta property="og:description" content="Стратегия, систематизация, маркетинг, продажи, HR, финансы, IT и AI в одной группе. Бесплатная диагностика бизнеса.">
   <meta property="og:url" content="https://nexagroup.kz/">
   <meta property="og:image" content="https://nexagroup.kz/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -66,6 +69,12 @@
     <!-- ============ 01 HERO ============ -->
     <section class="hero">
       <div class="hero__grid-bg" aria-hidden="true"></div>
+      <div class="hero__fx" aria-hidden="true">
+        <div class="hero__beam hero__beam--a"></div>
+        <div class="hero__beam hero__beam--b"></div>
+        <pre class="hero__code" id="heroCode"></pre>
+        <div class="hero__grain"></div>
+      </div>
       <div class="container hero__inner">
         <div class="hero__content">
           <p class="eyebrow eyebrow--light">Business Transformation &amp; Growth Ecosystem</p>
@@ -83,7 +92,7 @@
         </div>
 
         <div class="hero__visual" aria-hidden="true">
-          <div class="panel">
+          <div class="panel-wrap"><div class="panel" id="heroPanel">
             <div class="panel__head">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
               <span class="panel__title mono">nexa.bos / roadmap</span>
@@ -101,7 +110,7 @@
               <div><span class="mono">KPI</span><b>дерево целей</b></div>
               <div><span class="mono">SLA</span><b>контроль</b></div>
             </div>
-          </div>
+          </div></div>
           <div class="chip chip--a">Оргструктура</div>
           <div class="chip chip--b">Регламенты · SOP</div>
           <div class="chip chip--c">AI Sales Agent</div>
@@ -147,6 +156,7 @@
           </div>
         </header>
 
+        <p class="swipe-hint" aria-hidden="true"><span>→</span> листайте карточки</p>
         <div class="cards" id="cards"><!-- заполняется из script.js --></div>
       </div>
     </section>
@@ -261,37 +271,38 @@
           <h2 class="h2">Форматы работы</h2>
           <p class="section__lead">Ориентиры стоимости. Точная цена фиксируется в коммерческом предложении после диагностики.</p>
         </header>
+        <p class="swipe-hint" aria-hidden="true"><span>→</span> листайте пакеты</p>
         <div class="packages">
           <article class="pkg reveal">
             <h3 class="pkg__name">Audit</h3>
             <p class="pkg__price"><small>от</small> 250&nbsp;000&nbsp;₸ <span>/ проект</span></p>
             <ul><li>Диагностика бизнеса</li><li>Карта проблем AS-IS</li><li>Roadmap изменений</li></ul>
-            <a href="#contact" class="btn btn--outline" data-package="NEXA AUDIT">Выбрать</a>
+            <a href="#contact" class="btn btn--outline" target="_blank" rel="noopener" data-package="NEXA AUDIT">Выбрать</a>
           </article>
           <article class="pkg reveal">
             <h3 class="pkg__name">Growth</h3>
             <p class="pkg__price"><small>от</small> 450&nbsp;000&nbsp;₸ <span>/ месяц</span></p>
             <ul><li>Маркетинг и реклама</li><li>Лидогенерация</li><li>Сквозная аналитика</li></ul>
-            <a href="#contact" class="btn btn--outline" data-package="NEXA GROWTH">Выбрать</a>
+            <a href="#contact" class="btn btn--outline" target="_blank" rel="noopener" data-package="NEXA GROWTH">Выбрать</a>
           </article>
           <article class="pkg pkg--featured reveal">
             <span class="pkg__badge">Ключевой продукт</span>
             <h3 class="pkg__name">System</h3>
             <p class="pkg__price"><small>от</small> 1&nbsp;500&nbsp;000&nbsp;₸ <span>/ проект</span></p>
             <ul><li>Оргструктура и RACI</li><li>ЦКП и KPI</li><li>Регламенты и SOP</li><li>Регулярный менеджмент</li></ul>
-            <a href="#contact" class="btn btn--primary" data-package="NEXA SYSTEM">Выбрать</a>
+            <a href="#contact" class="btn btn--primary" target="_blank" rel="noopener" data-package="NEXA SYSTEM">Выбрать</a>
           </article>
           <article class="pkg reveal">
             <h3 class="pkg__name">Transformation</h3>
             <p class="pkg__price"><small>от</small> 3&nbsp;000&nbsp;000&nbsp;₸ <span>/ проект</span></p>
             <ul><li>Система управления</li><li>Отдел продаж и HR</li><li>Внедрение CRM / ERP</li></ul>
-            <a href="#contact" class="btn btn--outline" data-package="NEXA TRANSFORMATION">Выбрать</a>
+            <a href="#contact" class="btn btn--outline" target="_blank" rel="noopener" data-package="NEXA TRANSFORMATION">Выбрать</a>
           </article>
           <article class="pkg pkg--dark reveal">
             <h3 class="pkg__name">Enterprise</h3>
             <p class="pkg__price pkg__price--text">Индивидуально</p>
             <ul><li>Корпоративная трансформация</li><li>PMO и сопровождение</li><li>Филиалы и масштабирование</li></ul>
-            <a href="#contact" class="btn btn--light" data-package="NEXA ENTERPRISE">Обсудить</a>
+            <a href="#contact" class="btn btn--light" target="_blank" rel="noopener" data-package="NEXA ENTERPRISE">Обсудить</a>
           </article>
         </div>
       </div>

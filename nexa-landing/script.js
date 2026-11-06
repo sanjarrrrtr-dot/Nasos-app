@@ -356,4 +356,122 @@
     var a = e.target.closest("[data-track]");
     if (a) track("contact_click", { channel: "whatsapp", place: a.dataset.track, direction: a.dataset.dir || undefined });
   });
+  /* ---------- Пакеты: сразу в WhatsApp с готовым текстом ---------- */
+  document.querySelectorAll("[data-package]").forEach(function (a) {
+    a.href = waLink("Здравствуйте! Интересует пакет " + a.dataset.package + ". Расскажите, пожалуйста, об условиях и сроках.");
+    a.setAttribute("data-track", "whatsapp_package");
+  });
+
+  /* ---------- Типограф: короткие слова не остаются в конце строки ---------- */
+  (function typograph(root) {
+    var SHORT = /(^|[\s(«"])(в|во|и|с|со|к|ко|о|об|у|а|на|по|за|от|до|не|из|для|при|без|или|что|как|по|под|над|про|же)\s+/gi;
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        var p = n.parentNode && n.parentNode.nodeName;
+        return /^(SCRIPT|STYLE|PRE|CODE|TEXTAREA|OPTION)$/.test(p) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var n, list = [];
+    while ((n = walker.nextNode())) list.push(n);
+    list.forEach(function (t) {
+      var v = t.nodeValue;
+      if (v.trim().length < 3) return;
+      var out = v.replace(SHORT, "$1$2 ").replace(SHORT, "$1$2 ").replace(/\s+—/g, " —");
+      if (out !== v) t.nodeValue = out;
+    });
+  })(document.body);
+
+  /* ---------- Живой фон первого экрана ---------- */
+  var hero = document.querySelector(".hero");
+  var code = document.getElementById("heroCode");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (hero && code) {
+    var LINES = [
+      "diagnose({ company, owner, departments })  → map.problems",
+      "org.structure = design(roles, RACI)          // ✓ утверждено",
+      "ckp.sales = 'план прибыльных продаж выполнен'",
+      "kpi.tree.push({ metric: 'конверсия', plan: 32, fact: 27 })",
+      "sop.create('обработка заявки', { sla: '15 мин' })",
+      "crm.pipeline = ['лид', 'квалификация', 'КП', 'договор', 'оплата']",
+      "ai.agent('sales').qualify(lead).handoff(manager)",
+      "erp.sync(['финансы', 'склад', 'персонал'])",
+      "control.weekly({ planFact: true, deviations: 'owner' })",
+      "scale.branch(model).replicate()               // тиражируемая модель",
+      "finance.report(['P&L', 'Cash Flow', 'БДДС'])",
+      "people.onboarding({ mentor: true, test: 'регламенты' })"
+    ];
+    var text = [];
+    for (var i = 0; i < 46; i++) text.push(LINES[(i * 5) % LINES.length]);
+    code.textContent = text.join("\n");
+
+    var tx = 0.7, ty = 0.4, cx = tx, cy = ty, mouseAt = 0, t0 = performance.now(), raf = null, heroVisible = true;
+    var scrolling = false, scrollTimer;
+
+    hero.addEventListener("pointermove", function (e) {
+      if (e.pointerType !== "mouse") return;
+      var r = hero.getBoundingClientRect();
+      tx = (e.clientX - r.left) / r.width;
+      ty = (e.clientY - r.top) / r.height;
+      mouseAt = performance.now();
+    });
+
+    function frame(now) {
+      raf = null;
+      if (!heroVisible || document.hidden || scrolling) return;
+      if (now - mouseAt > 2500) {
+        /* без мыши свет медленно гуляет сам */
+        var k = (now - t0) / 1000;
+        tx = 0.55 + Math.sin(k * 0.23) * 0.3;
+        ty = 0.45 + Math.cos(k * 0.31) * 0.25;
+      }
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
+      hero.style.setProperty("--mx", (cx * 100).toFixed(2) + "%");
+      hero.style.setProperty("--my", (cy * 100).toFixed(2) + "%");
+      code.style.setProperty("--mx", (cx * 100).toFixed(2) + "%");
+      code.style.setProperty("--my", (cy * 100).toFixed(2) + "%");
+      loop();
+    }
+    function loop() { if (!raf && !reduce) raf = requestAnimationFrame(frame); }
+
+    /* пауза эффектов: при быстрой прокрутке, в скрытой вкладке и вне экрана */
+    window.addEventListener("scroll", function () {
+      if (!scrolling) { scrolling = true; document.body.classList.add("is-scrolling"); }
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(function () { scrolling = false; document.body.classList.remove("is-scrolling"); loop(); }, 160);
+    }, { passive: true });
+    document.addEventListener("visibilitychange", loop);
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (en) {
+        heroVisible = en[0].isIntersecting;
+        hero.classList.toggle("is-paused", !heroVisible);
+        loop();
+      }).observe(hero);
+    }
+    loop();
+  }
+
+  /* ---------- Наклон карточки с бликом на краю ---------- */
+  var panel = document.getElementById("heroPanel");
+  var area = document.querySelector(".hero__visual");
+  if (panel && area && !reduce && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    /* область отслеживания неподвижна — двигается только карточка внутри неё */
+    area.addEventListener("pointermove", function (e) {
+      var r = area.getBoundingClientRect();
+      var x = (e.clientX - r.left) / r.width - 0.5;
+      var y = (e.clientY - r.top) / r.height - 0.5;
+      panel.classList.add("is-tilting");
+      panel.style.setProperty("--ry", (x * 10).toFixed(2) + "deg");
+      panel.style.setProperty("--rx", (-y * 8).toFixed(2) + "deg");
+      /* блик — на том краю, куда наклоняется карточка */
+      var gx = x > 0 ? 100 : 0, gy = y > 0 ? 100 : 0;
+      panel.style.setProperty("--gx", (Math.abs(x) > Math.abs(y) ? gx : 50 + x * 100) + "%");
+      panel.style.setProperty("--gy", (Math.abs(y) >= Math.abs(x) ? gy : 50 + y * 100) + "%");
+    });
+    area.addEventListener("pointerleave", function () {
+      panel.classList.remove("is-tilting");
+      panel.style.setProperty("--rx", "0deg");
+      panel.style.setProperty("--ry", "0deg");
+    });
+  }
 })();

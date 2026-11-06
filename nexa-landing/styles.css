@@ -178,7 +178,10 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   border-radius: var(--r-lg);
   padding: 20px;
   box-shadow: var(--shadow-lg);
-  animation: float 7s ease-in-out infinite;
+  position: relative;
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform .5s var(--ease);
+  will-change: transform;
 }
 .panel__head { display: flex; align-items: center; gap: 6px; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, .06); }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: #334155; }
@@ -209,7 +212,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 .chip::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--teal); margin-right: 8px; vertical-align: 1px; }
 .chip--a { top: -18px; right: 24px; animation: float 6s ease-in-out infinite .5s; }
-.chip--b { bottom: 170px; left: -40px; animation: float 8s ease-in-out infinite 1s; }
+.chip--b { bottom: -18px; left: 24px; animation: float 8s ease-in-out infinite 1s; }
 .chip--c { bottom: -18px; right: -10px; background: var(--teal); color: #fff; animation: float 7s ease-in-out infinite 2s; }
 .chip--c::before { background: #fff; }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
@@ -498,7 +501,7 @@ input.is-invalid { border-color: #DC2626; background: #FEF2F2; }
 .no-js .reveal { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
-  .panel, .chip, .bos__ring, .wa-float::before { animation: none; }
+  .panel-wrap, .chip, .bos__ring, .wa-float::before, .hero__beam, .swipe-hint span { animation: none; }
 }
 
 /* =========================================================
@@ -582,4 +585,81 @@ input.is-invalid { border-color: #DC2626; background: #FEF2F2; }
   .hero__facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   .hero__facts li { flex-direction: column; align-items: flex-start; gap: 8px; }
   .hero__facts span { max-width: none; }
+}
+
+/* =========================================================
+   Живой фон первого экрана, наклон карточки, карусели
+   ========================================================= */
+section[id], main [id] { scroll-margin-top: 80px; }
+
+.hero__fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.hero__beam {
+  position: absolute; width: 140%; height: 220px; left: -20%;
+  filter: blur(40px); opacity: .55; transform-origin: center;
+  animation: beam 18s ease-in-out infinite alternate;
+}
+.hero__beam--a { top: 12%; background: linear-gradient(90deg, transparent, rgba(20, 184, 166, .45), transparent); transform: rotate(-14deg); }
+.hero__beam--b { top: 58%; height: 160px; background: linear-gradient(90deg, transparent, rgba(94, 234, 212, .28), transparent); transform: rotate(-8deg); animation-duration: 24s; animation-delay: -6s; }
+@keyframes beam {
+  0% { translate: -12% 0; }
+  100% { translate: 12% -30px; }
+}
+.hero__code {
+  position: absolute; inset: 0; margin: 0; padding: 90px 0 0 40px;
+  font: 13px/1.95 var(--f-mono); color: #5EEAD4; white-space: pre; overflow: hidden;
+  opacity: .5;
+  -webkit-mask-image: radial-gradient(300px circle at var(--mx, 70%) var(--my, 40%), #000 0%, rgba(0, 0, 0, .35) 45%, transparent 72%);
+          mask-image: radial-gradient(300px circle at var(--mx, 70%) var(--my, 40%), #000 0%, rgba(0, 0, 0, .35) 45%, transparent 72%);
+}
+.hero__grain {
+  position: absolute; inset: 0; opacity: .07; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+}
+.hero.is-paused .hero__beam,
+body.is-scrolling .hero__beam { animation-play-state: paused; }
+
+.panel-wrap { animation: float 7s ease-in-out infinite; }
+.panel::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(180px circle at var(--gx, 50%) var(--gy, 0%), rgba(255, 255, 255, .16), transparent 60%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  padding: 1px; opacity: 0; transition: opacity .4s;
+}
+.panel.is-tilting::after { opacity: 1; }
+.panel.is-tilting { transition: transform .12s linear; }
+
+.swipe-hint { display: none; }
+
+@media (max-width: 640px) {
+  .hero__code { font-size: 11px; opacity: .16; padding: 80px 0 0 12px; }
+  .hero__beam { opacity: .35; }
+
+  .swipe-hint {
+    display: flex; align-items: center; gap: 8px; margin: -16px 0 14px;
+    font-family: var(--f-mono); font-size: 12px; color: var(--slate); text-transform: lowercase;
+  }
+  .swipe-hint span { display: inline-block; font-size: 18px; color: var(--teal); animation: swipe 1.8s ease-in-out infinite; }
+  @keyframes swipe { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(10px); } }
+
+  .cards, .packages {
+    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+    margin: 0 calc(var(--gutter) * -1); padding: 14px var(--gutter) 12px;
+    scroll-padding: 0 var(--gutter); scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .cards::-webkit-scrollbar, .packages::-webkit-scrollbar { display: none; }
+  .cards > .card, .packages > .pkg { flex: 0 0 84%; scroll-snap-align: start; }
+  .cards > .card.is-hidden { display: none; }
+  .cards .card:hover, .packages .pkg:hover { transform: none; }
+}
+
+@media (max-width: 380px) {
+  .h2 { font-size: 23px; }
+  .hero__title { font-size: 31px; }
+  .h2, .hero__title { overflow-wrap: break-word; hyphens: auto; }
+}
+@media (min-width: 641px) {
+  .hero__facts { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 32px; }
+  .hero__facts span { max-width: 132px; }
 }
