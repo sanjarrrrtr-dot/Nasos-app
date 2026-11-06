@@ -29,6 +29,20 @@
   function waLink(text) {
     return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text);
   }
+  /* Открыть WhatsApp; если браузер заблокировал окно — показать обычную ссылку */
+  function openWa(text, form) {
+    var url = waLink(text), w = null;
+    try { w = window.open(url, "_blank"); if (w) w.opener = null; } catch (e) { w = null; }
+    var a = form.querySelector(".wa-fallback");
+    if (!a) {
+      a = document.createElement("a");
+      a.className = "btn btn--primary btn--lg btn--block wa-fallback";
+      a.target = "_blank"; a.rel = "noopener";
+      form.appendChild(a);
+    }
+    a.href = url;
+    a.textContent = w ? "WhatsApp не открылся? Нажмите здесь" : "Открыть WhatsApp с заявкой →";
+  }
   function utmLine() {
     var keys = Object.keys(utm);
     if (!keys.length) return "";
@@ -200,7 +214,7 @@
       (clip(f.comment.value, 600) ? "Комментарий: " + clip(f.comment.value, 600) : "") +
       utmLine();
     track("generate_lead", { form: "contact", interest: f.interest.value || "—" });
-    window.open(waLink(text), "_blank", "noopener");
+    openWa(text, leadForm);
   });
 
   /* ---------- Интерактивная диагностика ---------- */
@@ -345,7 +359,7 @@
         "Рекомендация: " + r.pkg.n + " (" + r.dirs.join(", ") + ")" +
         utmLine();
       track("generate_lead", { form: "diagnostic", package: r.pkg.n });
-      window.open(waLink(text), "_blank", "noopener");
+      openWa(text, form);
     });
   }
 

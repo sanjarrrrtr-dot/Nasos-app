@@ -496,7 +496,7 @@ input.is-invalid { border-color: #DC2626; background: #FEF2F2; }
 @keyframes pulse { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.6); opacity: 0; } }
 
 /* Reveal animations */
-.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.reveal { transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
 .reveal.is-visible { opacity: 1; transform: none; }
 .no-js .reveal { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
@@ -694,3 +694,8 @@ html[data-font="d"] .hero__title, html[data-font="d"] .h2 { font-weight: 800; le
   font: 500 13px var(--f-mono); box-shadow: var(--shadow-lg);
 }
 .font-badge b { color: var(--teal); text-transform: uppercase; }
+
+/* Шапка учитывает вырез экрана телефона */
+.header { padding-top: env(safe-area-inset-top, 0px); }
+.wa-fallback { margin-top: 4px; }
+.quiz .wa-fallback { grid-column: 1 / -1; }
