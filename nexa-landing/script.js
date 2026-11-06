@@ -474,4 +474,8 @@
       panel.style.setProperty("--ry", "0deg");
     });
   }
+  /* Бейдж выбранного шрифта (только в режиме предпросмотра) */
+  var fb = document.getElementById("fontBadge");
+  var fv = document.documentElement.getAttribute("data-font");
+  if (fb && fv) { fb.querySelector("b").textContent = fv; fb.hidden = false; }
 })();

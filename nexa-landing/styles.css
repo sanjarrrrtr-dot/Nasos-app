@@ -663,3 +663,34 @@ body.is-scrolling .hero__beam { animation-play-state: paused; }
   .hero__facts { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 32px; }
   .hero__facts span { max-width: 132px; }
 }
+
+/* =========================================================
+   Варианты шрифтов (index.html?font=a|b|c|d)
+   ========================================================= */
+html[data-font="b"] {
+  --f-display: "Manrope", system-ui, sans-serif;
+  --f-body: "Manrope", system-ui, sans-serif;
+}
+html[data-font="b"] .hero__title,
+html[data-font="b"] .h2 { font-weight: 800; letter-spacing: -.035em; }
+html[data-font="b"] .hero__title em {
+  font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 600;
+  letter-spacing: -.01em; font-size: 1.12em; line-height: .9;
+}
+html[data-font="c"] {
+  --f-display: "Geologica", system-ui, sans-serif;
+  --f-body: "Onest", system-ui, sans-serif;
+}
+html[data-font="c"] .hero__title, html[data-font="c"] .h2 { letter-spacing: -.035em; }
+html[data-font="d"] {
+  --f-display: "Golos Text", system-ui, sans-serif;
+  --f-body: "Golos Text", system-ui, sans-serif;
+}
+html[data-font="d"] .hero__title, html[data-font="d"] .h2 { font-weight: 800; letter-spacing: -.035em; }
+
+.font-badge {
+  position: fixed; left: 16px; bottom: 16px; z-index: 95;
+  padding: 10px 14px; border-radius: 999px; background: #fff; color: var(--navy);
+  font: 500 13px var(--f-mono); box-shadow: var(--shadow-lg);
+}
+.font-badge b { color: var(--teal); text-transform: uppercase; }

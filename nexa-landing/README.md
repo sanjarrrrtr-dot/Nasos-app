@@ -27,6 +27,11 @@ Hero → Боли → 8 направлений → Как работаем (BOS)
 - Кнопки пакетов сразу открывают WhatsApp с текстом про выбранный пакет.
 - `og.png` — обложка ссылки для WhatsApp/Telegram.
 
+## Шрифты
+`fonts.html` — сравнение 4 вариантов на текстах сайта. Весь сайт с другим шрифтом: `index.html?font=b`
+(a — Unbounded+Inter, b — Manrope+Cormorant, c — Geologica+Onest, d — Golos Text).
+После выбора вариант переносится в `:root` в `styles.css`, а переключатель можно удалить.
+
 ## Локальный просмотр
     python3 -m http.server 8000   # затем http://localhost:8000
 
