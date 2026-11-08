@@ -1,0 +1,25 @@
+# NEXA GROUP — сайт, версия 2
+
+Стиль «консалтинговый отчёт»: светлые листы, схемы тонкой линией, тёмные разделы для методологии и заявки.
+Первая версия лежит в `../nexa-landing/` для сравнения.
+
+## Запуск
+    npm install
+    npm run dev       # разработка, http://localhost:5173
+    npm run build     # готовый сайт в папке dist/
+
+Содержимое `dist/` загружается на любой хостинг (ps.kz, hoster.kz и т.п.) как обычные файлы.
+
+## Что внутри
+- Vite — сборка (минификация, хеши файлов для кеша).
+- Шрифты подключены локально через Fontsource, без Google Fonts:
+  Cormorant Garamond (заголовки), Golos Text (текст), IBM Plex Mono (подписи и цифры).
+- `index.html` — разметка и SEO; `src/styles.css` — оформление; `src/main.js` — логика.
+- Практики и отрасли редактируются в массивах `PRACTICES` и `INDUSTRIES` в `src/main.js`.
+- Все заявки уходят в WhatsApp +7 707 779 96 56 с текстом, ответами диагностики и UTM.
+
+## Перед запуском
+- Домен `nexagroup.kz` в `index.html`, `public/robots.txt`, `public/sitemap.xml` заменить на свой.
+- Вставить ID Google Analytics 4 / GTM — события уже отправляются в `dataLayer`.
+- Реквизиты юрлица в `public/privacy.html`.
+- Добавить фото основателя и реальные кейсы, когда будут.

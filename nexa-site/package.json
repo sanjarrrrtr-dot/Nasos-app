@@ -1,0 +1,19 @@
+{
+  "name": "nexa-group-site",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.11"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.1.0",
+    "@fontsource/golos-text": "^5.1.0",
+    "@fontsource/ibm-plex-mono": "^5.1.0"
+  }
+}
