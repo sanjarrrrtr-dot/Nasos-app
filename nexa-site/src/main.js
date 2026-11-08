@@ -8,6 +8,7 @@ import "@fontsource/golos-text/600.css";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./styles.css";
+import "./blocks.css";
 
 const WA = "77077799656";
 const waLink = (text) => `https://wa.me/${WA}?text=${encodeURIComponent(text)}`;
@@ -346,6 +347,53 @@ document.addEventListener("click", (e) => {
   const a = e.target.closest("[data-track]");
   if (a) track("contact_click", { channel: "whatsapp", place: a.dataset.track });
 });
+
+/* ---------- Калькулятор потерь ---------- */
+const fmt = (n) => Math.round(n).toLocaleString("ru-RU").replace(/\s/g, " ");
+const num = (id, max) => { const v = Number($(id).value); return Number.isFinite(v) ? Math.min(Math.max(v, 0), max) : 0; };
+let calcShown = { m: 0, y: 0 };
+let calcRaf = null;
+function animateTo(m, y) {
+  cancelAnimationFrame(calcRaf);
+  const from = { ...calcShown };
+  const t0 = performance.now();
+  const dur = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 600;
+  const tick = (t) => {
+    const k = dur ? Math.min(1, (t - t0) / dur) : 1;
+    const e = 1 - Math.pow(1 - k, 3);
+    calcShown = { m: from.m + (m - from.m) * e, y: from.y + (y - from.y) * e };
+    $("#calcMonth").textContent = fmt(calcShown.m);
+    $("#calcYear").textContent = fmt(calcShown.y);
+    if (k < 1) calcRaf = requestAnimationFrame(tick);
+  };
+  calcRaf = requestAnimationFrame(tick);
+}
+function calc() {
+  const leads = num("#c-leads", 100000), lost = num("#c-lost", 100), conv = num("#c-conv", 100), check = num("#c-check", 1e10);
+  const month = leads * (lost / 100) * (conv / 100) * check;
+  $("#calcFormula").textContent = `${fmt(leads)} заявок × ${lost} % потерь × ${conv} % конверсии × ${fmt(check)} ₸ = ${fmt(month)} ₸ в месяц`;
+  animateTo(month, month * 12);
+}
+$("#calcForm").addEventListener("input", calc);
+let calcTracked = false;
+$("#calcForm").addEventListener("change", () => { if (!calcTracked) { calcTracked = true; track("calculator_used"); } });
+
+/* ---------- Анимации при прокрутке: линия этапов и график ---------- */
+if ("IntersectionObserver" in window) {
+  const lit = new IntersectionObserver((en) => en.forEach((x) => {
+    if (x.isIntersecting) { x.target.classList.add("is-lit"); lit.unobserve(x.target); }
+  }), { threshold: 0.35 });
+  $$(".steps li, .chart").forEach((el) => lit.observe(el));
+} else {
+  $$(".steps li, .chart").forEach((el) => el.classList.add("is-lit"));
+}
+/* Стартовые цифры видны сразу, анимация — при изменении полей */
+{
+  const leads = num("#c-leads", 100000), lost = num("#c-lost", 100), conv = num("#c-conv", 100), check = num("#c-check", 1e10);
+  const m = leads * (lost / 100) * (conv / 100) * check;
+  calcShown = { m, y: m * 12 };
+  calc();
+}
 
 showInd(0);
 renderQ();

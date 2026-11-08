@@ -37,13 +37,14 @@
   <header class="top" id="top">
     <div class="wrap top__in">
       <a class="brand" href="#top" aria-label="NEXA GROUP — наверх">
-        <span class="brand__name">Nexa</span><span class="brand__sub">group</span>
+        <svg class="brand__mark" viewBox="0 0 28 28" aria-hidden="true"><rect x="9" y="2" width="10" height="7" rx="1"/><path d="M14 9v5M4 14h20M4 14v4M14 14v4M24 14v4"/><rect x="1" y="18" width="6" height="7" rx="1"/><rect x="11" y="18" width="6" height="7" rx="1" class="brand__acc"/><rect x="21" y="18" width="6" height="7" rx="1"/></svg><span class="brand__name">Nexa</span><span class="brand__sub">group</span>
       </a>
       <nav class="nav" id="nav" aria-label="Разделы">
         <a href="#practices">Практики</a>
         <a href="#industries">Отрасли</a>
         <a href="#method">Как работаем</a>
         <a href="#results">Результат</a>
+        <a href="#cases">Кейсы</a>
         <a href="#prices">Стоимость</a>
         <a href="#faq">Вопросы</a>
         <a class="nav__cta" href="#diagnostic">Пройти диагностику</a>
@@ -63,11 +64,11 @@
       <div class="wrap hero__in">
         <div class="hero__text">
           <p class="kicker">Управленческий консалтинг · Астана</p>
-          <h1 class="hero__title">Превращаем бизнес в&nbsp;<em>управляемую систему</em> роста</h1>
-          <p class="hero__lead">Находим, где компания теряет деньги и&nbsp;время, описываем роли и&nbsp;процессы, ставим KPI, запускаем продажи и&nbsp;автоматизацию. Отвечаем за&nbsp;результат каждого этапа.</p>
+          <h1 class="hero__title">Бизнес, который работает <em>без вас</em></h1>
+          <p class="hero__lead">Находим, где компания теряет деньги и&nbsp;время. Описываем роли и&nbsp;процессы, ставим KPI, запускаем продажи и&nbsp;автоматизацию — чтобы решения принимались без ежедневного участия собственника.</p>
           <div class="hero__cta">
             <a class="btn btn--primary" href="#diagnostic" data-track="cta_hero">Пройти диагностику</a>
-            <a class="btn btn--line" href="https://wa.me/77077799656?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BE%D0%B1%D1%81%D1%83%D0%B4%D0%B8%D1%82%D1%8C%20%D0%B7%D0%B0%D0%B4%D0%B0%D1%87%D1%83%20%D0%B1%D0%B8%D0%B7%D0%BD%D0%B5%D1%81%D0%B0." target="_blank" rel="noopener" data-track="wa_hero">Обсудить в WhatsApp</a>
+            <a class="hero__alt" href="https://wa.me/77077799656?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BE%D0%B1%D1%81%D1%83%D0%B4%D0%B8%D1%82%D1%8C%20%D0%B7%D0%B0%D0%B4%D0%B0%D1%87%D1%83%20%D0%B1%D0%B8%D0%B7%D0%BD%D0%B5%D1%81%D0%B0." target="_blank" rel="noopener" data-track="wa_hero">или написать в&nbsp;WhatsApp</a>
           </div>
           <dl class="hero__facts">
             <div><dt>Диагностика</dt><dd>от 250 000 ₸</dd></div>
@@ -123,6 +124,30 @@
           <li><b>Отделы работают каждый сам по&nbsp;себе.</b> Задачи падают на&nbsp;стыках, ответственных не&nbsp;найти.</li>
           <li><b>Новые сотрудники долго входят в&nbsp;работу.</b> Регламентов нет, всё передаётся устно.</li>
         </ul>
+      </div>
+    </section>
+
+
+    <!-- Калькулятор потерь -->
+    <section class="sec sec--sheet" id="calc">
+      <div class="wrap calc">
+        <header class="calc__head">
+          <h2 class="h2">Сколько вы теряете на&nbsp;необработанных заявках</h2>
+          <p class="sub">Подставьте свои цифры. Расчёт простой и&nbsp;прозрачный: формула под результатом.</p>
+        </header>
+        <form class="calc__form" id="calcForm" onsubmit="return false">
+          <div class="calc__field"><label for="c-leads">Заявок в&nbsp;месяц</label><input id="c-leads" type="number" inputmode="numeric" min="0" max="100000" value="300"></div>
+          <div class="calc__field"><label for="c-lost">Теряется заявок, %</label><input id="c-lost" type="number" inputmode="numeric" min="0" max="100" value="20"></div>
+          <div class="calc__field"><label for="c-conv">Конверсия заявки в&nbsp;продажу, %</label><input id="c-conv" type="number" inputmode="numeric" min="0" max="100" value="15"></div>
+          <div class="calc__field"><label for="c-check">Средний чек, ₸</label><input id="c-check" type="number" inputmode="numeric" min="0" step="1000" value="250000"></div>
+        </form>
+        <div class="calc__out" aria-live="polite">
+          <p class="calc__label">Недополученная выручка</p>
+          <p class="calc__sum"><span id="calcMonth">0</span>&nbsp;₸ <small>в&nbsp;месяц</small></p>
+          <p class="calc__year"><span id="calcYear">0</span>&nbsp;₸ в&nbsp;год</p>
+          <p class="calc__formula" id="calcFormula"></p>
+          <a class="btn btn--primary" href="#diagnostic" data-track="cta_calc">Найти, где теряются заявки</a>
+        </div>
       </div>
     </section>
 
@@ -228,6 +253,59 @@
           </article>
         </div>
         <p class="note">Цифры в&nbsp;примерах условные. Реальные кейсы клиентов покажем на&nbsp;встрече.</p>
+      </div>
+    </section>
+
+
+    <!-- Кейсы -->
+    <section class="sec sec--sheet" id="cases">
+      <div class="wrap">
+        <header class="row-head">
+          <div>
+            <h2 class="h2">Кейсы</h2>
+            <p class="sub">Здесь будут реальные проекты: что было, что сделали и&nbsp;какой результат в&nbsp;цифрах.</p>
+          </div>
+        </header>
+        <div class="cases">
+          <article class="case case--draft">
+            <p class="case__tag">Место для кейса · Торговля</p>
+            <dl>
+              <div><dt>Было</dt><dd>Задача клиента и&nbsp;исходные цифры</dd></div>
+              <div><dt>Сделали</dt><dd>Какие практики подключили и&nbsp;за&nbsp;какой срок</dd></div>
+              <div><dt>Результат</dt><dd>Изменение выручки, конверсии или сроков</dd></div>
+            </dl>
+          </article>
+          <article class="case case--draft">
+            <p class="case__tag">Место для кейса · Услуги</p>
+            <dl>
+              <div><dt>Было</dt><dd>Задача клиента и&nbsp;исходные цифры</dd></div>
+              <div><dt>Сделали</dt><dd>Какие практики подключили и&nbsp;за&nbsp;какой срок</dd></div>
+              <div><dt>Результат</dt><dd>Изменение выручки, конверсии или сроков</dd></div>
+            </dl>
+          </article>
+          <article class="case case--draft">
+            <p class="case__tag">Место для отзыва</p>
+            <blockquote>Короткая цитата клиента о&nbsp;результате работы.</blockquote>
+            <p class="case__who">Имя, должность, компания</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Основатель -->
+    <section class="sec" id="founder">
+      <div class="wrap founder">
+        <div class="founder__photo" role="img" aria-label="Место для фото основателя"><span>Фото основателя</span></div>
+        <div class="founder__text">
+          <h2 class="h2">Кто отвечает за&nbsp;результат</h2>
+          <p class="founder__name">Имя Фамилия <span>· основатель NEXA GROUP</span></p>
+          <ul class="founder__facts">
+            <li>Опыт в&nbsp;управлении и&nbsp;консалтинге: сколько лет и&nbsp;где</li>
+            <li>Сколько компаний систематизировали</li>
+            <li>Ключевые результаты в&nbsp;цифрах</li>
+          </ul>
+          <p class="note">Блок заполним вашими данными и&nbsp;фото.</p>
+        </div>
       </div>
     </section>
 
@@ -378,7 +456,7 @@
   <footer class="foot">
     <div class="wrap foot__in">
       <div>
-        <a class="brand brand--light" href="#top"><span class="brand__name">Nexa</span><span class="brand__sub">group</span></a>
+        <a class="brand brand--light" href="#top"><svg class="brand__mark" viewBox="0 0 28 28" aria-hidden="true"><rect x="9" y="2" width="10" height="7" rx="1"/><path d="M14 9v5M4 14h20M4 14v4M14 14v4M24 14v4"/><rect x="1" y="18" width="6" height="7" rx="1"/><rect x="11" y="18" width="6" height="7" rx="1" class="brand__acc"/><rect x="21" y="18" width="6" height="7" rx="1"/></svg><span class="brand__name">Nexa</span><span class="brand__sub">group</span></a>
         <p>От&nbsp;хаоса в&nbsp;бизнесе к&nbsp;управляемой системе роста.</p>
       </div>
       <nav aria-label="Практики">
