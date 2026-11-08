@@ -13,9 +13,9 @@
 ## Что внутри
 - Vite — сборка (минификация, хеши файлов для кеша).
 - Шрифты подключены локально через Fontsource, без Google Fonts:
-  Cormorant Garamond (заголовки), Golos Text (текст), IBM Plex Mono (подписи и цифры).
+  Unbounded (заголовки, по ТЗ), Inter (текст, по ТЗ), IBM Plex Mono (подписи и цифры).
 - `index.html` — разметка и SEO; `src/styles.css` — оформление; `src/main.js` — логика.
-- Практики и отрасли редактируются в массивах `PRACTICES` и `INDUSTRIES` в `src/main.js`.
+- Практики, задачи, отрасли и отделы схемы редактируются в массивах `PRACTICES`, `TASKS`, `INDUSTRIES`, `DEPTS` в `src/main.js`.
 - Все заявки уходят в WhatsApp +7 707 779 96 56 с текстом, ответами диагностики и UTM.
 
 ## Перед запуском

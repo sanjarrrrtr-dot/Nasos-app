@@ -1,0 +1,70 @@
+/* Нижний уровень схемы: CRM · ERP · AI */
+.org__sys path { fill: none; stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 3 4; }
+.org__sys rect { fill: var(--paper); stroke: var(--accent); stroke-width: 1.2; }
+.org__sys text { font-family: var(--f-body); font-size: 12.5px; fill: var(--ink-2); text-anchor: middle; }
+.org__sys .b { font-family: var(--f-mono); font-weight: 500; fill: var(--accent); }
+.org__note text { text-anchor: middle; }
+@media (prefers-reduced-motion: no-preference) {
+  .org__sys { opacity: 0; animation: appear .5s var(--ease) 1.75s forwards; transform-box: fill-box; }
+}
+
+/* Интерактивные отделы */
+.org .n-c { cursor: pointer; outline: none; }
+.org .n-c rect { transition: fill .2s, stroke .2s; }
+.org .n-c text { transition: fill .2s; }
+.org .n-c:hover rect, .org .n-c:focus-visible rect, .org .n-c.is-on rect { fill: var(--accent); stroke: var(--accent); }
+.org .n-c:hover text, .org .n-c:focus-visible text, .org .n-c.is-on text { fill: #fff; }
+.org .tag { transition: opacity .2s; }
+.org.has-focus .tag:not(.is-on) { opacity: .25; }
+.board__info {
+  margin: 4px 0 10px; padding: 12px 14px; min-height: 66px;
+  border-top: 1px solid var(--rule); background: var(--sheet);
+  font-size: 14px; line-height: 1.5; color: var(--ink-2);
+}
+.board__info b { display: block; color: var(--ink); font-weight: 600; }
+
+/* Решения по задачам */
+.tasks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--ink); }
+.task { border-bottom: 1px solid var(--rule); }
+.task:not(:nth-child(3n)) { border-right: 1px solid var(--rule); }
+.task a { display: grid; gap: 8px; height: 100%; padding: 26px 24px 24px 0; text-decoration: none; color: inherit; position: relative; }
+.task:not(:nth-child(3n + 1)) a { padding-left: 24px; }
+.task__t { font: 600 18px/1.25 var(--f-display); letter-spacing: -.02em; padding-right: 28px; }
+.task__d { color: var(--ink-2); font-size: 15px; }
+.task__p { margin-top: 6px; font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.task a::after { content: "→"; position: absolute; top: 26px; right: 20px; color: var(--muted); transition: transform .25s var(--ease), color .2s; }
+.task a:hover .task__t { color: var(--accent); }
+.task a:hover::after { transform: translateX(4px); color: var(--accent); }
+
+/* Команда проекта */
+.team__h { margin-top: 36px; font: 500 12px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.team { margin-top: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+.team div { padding: 12px 0; border-top: 1px solid var(--rule); }
+.team dt { font-weight: 600; }
+.team dd { color: var(--ink-2); font-size: 15px; }
+
+/* Что нужно: диагностика / КП / встреча */
+.intent { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.intent legend { width: 100%; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: var(--ink-2); padding: 0; }
+.intent label { position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 4px; font-size: 15px; cursor: pointer; }
+.intent input { width: 16px; height: 16px; padding: 0; margin: 0; accent-color: var(--accent); }
+.intent label:has(input:checked) { border-color: var(--accent); background: rgba(15, 118, 110, .06); }
+
+@media (max-width: 960px) {
+  .tasks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .task:not(:nth-child(3n)) { border-right: 0; }
+  .task:nth-child(odd) { border-right: 1px solid var(--rule); }
+  .task:not(:nth-child(3n + 1)) a { padding-left: 0; }
+  .task:nth-child(even) a { padding-left: 24px; }
+}
+@media (max-width: 640px) {
+  .tasks { grid-template-columns: minmax(0, 1fr); }
+  .task:nth-child(odd) { border-right: 0; }
+  .task:nth-child(even) a { padding-left: 0; }
+  .task a { padding: 20px 0; }
+  .task a::after { top: 20px; right: 0; }
+  .team { grid-template-columns: minmax(0, 1fr); }
+  .org__sys text { font-size: 15px; }
+  .org__sys text tspan:not(.b) { display: none; }
+  .intent label { flex: 1 1 100%; }
+}

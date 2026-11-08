@@ -41,7 +41,7 @@
       </a>
       <nav class="nav" id="nav" aria-label="Разделы">
         <a href="#practices">Практики</a>
-        <a href="#industries">Отрасли</a>
+        <a href="#solutions">Решения</a>
         <a href="#method">Как работаем</a>
         <a href="#results">Результат</a>
         <a href="#cases">Кейсы</a>
@@ -79,7 +79,7 @@
 
         <figure class="board" aria-label="Схема: собственник, отделы, их ЦКП и KPI">
           <figcaption class="board__cap"><span>Целевая модель управления</span><span>лист 1 из 6</span></figcaption>
-          <svg class="org" viewBox="0 0 520 400" role="img" aria-labelledby="orgTitle">
+          <svg class="org" viewBox="0 0 520 420" role="img" aria-labelledby="orgTitle">
             <title id="orgTitle">Схема оргструктуры: собственник, директор, пять отделов, у каждого ЦКП и KPI</title>
             <g class="org__lines">
               <path d="M260 66 V98" />
@@ -100,9 +100,13 @@
               <g class="tag t4"><text x="358" y="268">ЦКП</text><text class="sm" x="358" y="284">отчёт в срок</text><text class="kpi" x="358" y="306">P&amp;L, ДДС</text></g>
               <g class="tag t5"><text x="456" y="268">ЦКП</text><text class="sm" x="456" y="284">команда в штате</text><text class="kpi" x="456" y="306">текучесть</text></g>
             </g>
+            <g class="org__sys">
+              <path d="M64 316 V336 M162 316 V336 M260 316 V336 M358 316 V336 M456 316 V336" />
+              <rect x="18" y="336" width="484" height="34" rx="3" />
+              <text x="260" y="358"><tspan class="b">CRM · ERP · AI</tspan> автоматизируют описанные процессы</text>
+            </g>
             <g class="org__note">
-              <path d="M300 362 C330 340 352 334 372 322" />
-              <text x="160" y="370">каждый отдел знает свой результат</text>
+              <text x="260" y="404">каждый отдел знает свой результат</text>
             </g>
           </svg>
         </figure>
@@ -170,12 +174,25 @@
       </div>
     </section>
 
+    <!-- Решения по задачам -->
+    <section class="sec" id="solutions">
+      <div class="wrap">
+        <header class="row-head">
+          <div>
+            <h2 class="h2">Решения по&nbsp;задачам</h2>
+            <p class="sub">Выберите, что нужно сейчас. Подскажем, какие практики подключить и&nbsp;с&nbsp;чего начать.</p>
+          </div>
+        </header>
+        <ul class="tasks" id="tasksList"><!-- main.js --></ul>
+      </div>
+    </section>
+
     <!-- Отрасли -->
     <section class="sec" id="industries">
       <div class="wrap">
         <header class="row-head">
           <div>
-            <h2 class="h2">Что обычно делаем в&nbsp;вашей отрасли</h2>
+            <h2 class="h2">И&nbsp;по&nbsp;отраслям</h2>
             <p class="sub">Типовые задачи, с&nbsp;которых начинаем. Точный план составляем после диагностики.</p>
           </div>
         </header>
@@ -305,6 +322,15 @@
             <li>Ключевые результаты в&nbsp;цифрах</li>
           </ul>
           <p class="note">Блок заполним вашими данными и&nbsp;фото.</p>
+          <h3 class="team__h">Кто ещё работает в&nbsp;проекте</h3>
+          <dl class="team">
+            <div><dt>Руководитель проекта</dt><dd>План, сроки, связь с&nbsp;вами</dd></div>
+            <div><dt>Бизнес-консультант</dt><dd>Оргструктура, ЦКП, KPI, регламенты</dd></div>
+            <div><dt>Эксперт по&nbsp;продажам</dt><dd>Отдел продаж, CRM, скрипты</dd></div>
+            <div><dt>Маркетолог</dt><dd>Реклама, заявки, аналитика</dd></div>
+            <div><dt>IT и&nbsp;AI</dt><dd>CRM, ERP, интеграции, AI-агенты</dd></div>
+            <div><dt>Финансы и&nbsp;HR</dt><dd>Учёт, бюджеты, подбор, обучение</dd></div>
+          </dl>
         </div>
       </div>
     </section>
@@ -332,8 +358,8 @@
     <section class="sec sec--ink" id="diagnostic">
       <div class="wrap diag">
         <header class="diag__head">
-          <h2 class="h2">Экспресс-диагностика за&nbsp;минуту</h2>
-          <p class="sub">Пять вопросов о&nbsp;компании. В&nbsp;конце покажем, с&nbsp;какого формата работы разумно начать, и&nbsp;отправим ответы консультанту в&nbsp;WhatsApp.</p>
+          <h2 class="h2">Диагностика за&nbsp;2&nbsp;минуты</h2>
+          <p class="sub">Девять коротких вопросов о&nbsp;компании. В&nbsp;конце покажем, с&nbsp;какого формата работы разумно начать, и&nbsp;отправим ответы консультанту в&nbsp;WhatsApp.</p>
         </header>
         <div class="quiz" id="quiz">
           <div class="quiz__top"><span id="quizCount">Вопрос 1 из 5</span><span class="quiz__bar"><i id="quizBar"></i></span></div>
@@ -410,6 +436,7 @@
           <details><summary>Можно заказать только CRM или только маркетинг?</summary><p>Можно. Перед началом проведём короткую диагностику, чтобы CRM или реклама работали на&nbsp;понятный результат, а&nbsp;не&nbsp;ускоряли существующие проблемы.</p></details>
           <details><summary>Как вы гарантируете результат?</summary><p>У&nbsp;каждого этапа есть результат и&nbsp;критерии приёмки: карта проблем, утверждённые ЦКП и&nbsp;KPI, регламенты, работающая CRM. Следующий этап начинается только после вашей приёмки предыдущего.</p></details>
           <details><summary>Кто будет работать с&nbsp;нашей компанией?</summary><p>За&nbsp;проект отвечает руководитель проекта. В&nbsp;команде бизнес-консультант, а&nbsp;по&nbsp;необходимости специалисты по&nbsp;продажам, маркетингу, HR, финансам и&nbsp;IT.</p></details>
+          <details><summary>Что происходит после внедрения?</summary><p>Можно остаться на&nbsp;сопровождении: контроль KPI, ежемесячные встречи с&nbsp;собственником, доработка регламентов, внешний РОП, HR или финансовый директор, поддержка CRM по&nbsp;SLA.</p></details>
           <details><summary>Как вы обращаетесь с&nbsp;нашими данными?</summary><p>Подписываем NDA, разграничиваем доступы, обрабатываем персональные данные по&nbsp;законодательству Республики Казахстан.</p></details>
         </div>
       </div>
@@ -430,7 +457,13 @@
           <div class="field"><label for="f-name">Имя</label><input id="f-name" name="name" autocomplete="name" required maxlength="80"></div>
           <div class="field"><label for="f-company">Компания</label><input id="f-company" name="company" autocomplete="organization" maxlength="120"></div>
           <div class="field"><label for="f-phone">Телефон</label><input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 7__ ___ __ __" required maxlength="20"></div>
-          <div class="field"><label for="f-interest">Что интересует</label>
+          <fieldset class="intent field--wide">
+            <legend>Что нужно</legend>
+            <label><input type="radio" name="intent" value="Диагностика бизнеса" checked> Диагностика</label>
+            <label><input type="radio" name="intent" value="Коммерческое предложение"> Коммерческое предложение</label>
+            <label><input type="radio" name="intent" value="Встреча с консультантом"> Встреча с&nbsp;консультантом</label>
+          </fieldset>
+          <div class="field"><label for="f-interest">Направление</label>
             <select id="f-interest" name="interest">
               <option value="">Пока не знаю</option>
               <option>Систематизация</option>

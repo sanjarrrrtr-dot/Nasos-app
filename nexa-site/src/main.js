@@ -1,14 +1,15 @@
-import "@fontsource/cormorant-garamond/500.css";
-import "@fontsource/cormorant-garamond/600.css";
-import "@fontsource/cormorant-garamond/700.css";
-import "@fontsource/cormorant-garamond/500-italic.css";
-import "@fontsource/golos-text/400.css";
-import "@fontsource/golos-text/500.css";
-import "@fontsource/golos-text/600.css";
+import "@fontsource/unbounded/500.css";
+import "@fontsource/unbounded/600.css";
+import "@fontsource/unbounded/700.css";
+import "@fontsource/inter/400.css";
+import "@fontsource/inter/500.css";
+import "@fontsource/inter/600.css";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./styles.css";
 import "./blocks.css";
+import "./type.css";
+import "./interact.css";
 
 const WA = "77077799656";
 const waLink = (text) => `https://wa.me/${WA}?text=${encodeURIComponent(text)}`;
@@ -119,6 +120,65 @@ $$(".seg__b").forEach((b) => b.addEventListener("click", () => {
   track("practice_filter", { filter: b.dataset.f });
 }));
 
+
+/* ---------- Интерактивная схема: отдел → его ЦКП и KPI ---------- */
+const DEPTS = [
+  { n: "Продажи", ckp: "Выполненный план прибыльных продаж", kpi: "выручка, конверсия, средний чек" },
+  { n: "Маркетинг", ckp: "Квалифицированные заявки в рамках бюджета", kpi: "стоимость заявки, ROMI, доля целевых" },
+  { n: "Операции", ckp: "Заказы выполнены по стандарту и в срок", kpi: "соблюдение SLA, доля переделок" },
+  { n: "Финансы", ckp: "Достоверная отчётность вовремя", kpi: "срок закрытия месяца, точность прогноза" },
+  { n: "Персонал", ckp: "Укомплектованная результативная команда", kpi: "время закрытия вакансии, текучесть" }
+];
+{
+  const org = $(".org");
+  const nodes = $$(".n-c", org);
+  const tags = $$(".tag", org);
+  const touch = matchMedia("(hover: none)").matches;
+  const info = document.createElement("p");
+  info.className = "board__info";
+  info.setAttribute("aria-live", "polite");
+  const hint = touch ? "Нажмите на отдел, чтобы увидеть его ЦКП и KPI." : "Наведите на отдел, чтобы увидеть его ЦКП и KPI.";
+  info.textContent = hint;
+  $(".board").appendChild(info);
+  const show = (i) => {
+    nodes.forEach((n, j) => n.classList.toggle("is-on", i === j));
+    tags.forEach((t, j) => t.classList.toggle("is-on", i === j));
+    org.classList.toggle("has-focus", i >= 0);
+    if (i < 0) { info.textContent = hint; return; }
+    const d = DEPTS[i];
+    info.innerHTML = `<b>${esc(d.n)}: ${esc(d.ckp)}</b>KPI: ${esc(d.kpi)}`;
+  };
+  nodes.forEach((n, i) => {
+    n.setAttribute("tabindex", "0");
+    n.setAttribute("role", "button");
+    n.setAttribute("aria-label", `${DEPTS[i].n}: показать ЦКП и KPI`);
+    n.addEventListener("mouseenter", () => show(i));
+    n.addEventListener("focus", () => show(i));
+    n.addEventListener("click", () => { show(n.classList.contains("is-on") && touch ? -1 : i); track("org_node", { dept: DEPTS[i].n }); });
+    n.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(i); } });
+  });
+  org.addEventListener("mouseleave", () => { if (!touch) show(-1); });
+  org.addEventListener("focusout", (e) => { if (!org.contains(e.relatedTarget)) show(-1); });
+}
+
+/* ---------- Решения по задачам ---------- */
+const TASKS = [
+  { t: "Увеличить продажи", d: "Аудит воронки, структура отдела, скрипты, CRM и еженедельный контроль плана.", p: "Sales · Marketing" },
+  { t: "Навести порядок в управлении", d: "Оргструктура, ЦКП и KPI, регламенты, регулярные совещания.", p: "System · Strategy" },
+  { t: "Автоматизировать процессы", d: "CRM, ERP, интеграции и AI-агенты на уже описанные процессы.", p: "AI & Tech" },
+  { t: "Построить HR-систему", d: "Подбор, адаптация, оценка и мотивация, внешний HR-отдел.", p: "People · Academy" },
+  { t: "Сделать маркетинг окупаемым", d: "Стратегия, реклама, контент и сквозная аналитика по каждому каналу.", p: "Marketing" },
+  { t: "Увидеть реальную прибыль", d: "Управленческий учёт, P&L, движение денег, юнит-экономика.", p: "Finance" }
+];
+$("#tasksList").innerHTML = TASKS.map((x) => `
+  <li class="task">
+    <a href="${waLink(`Здравствуйте! Задача: ${x.t.toLowerCase()}. Хочу обсудить.`)}" target="_blank" rel="noopener" data-track="wa_task">
+      <span class="task__t">${esc(x.t)}</span>
+      <span class="task__d">${esc(x.d)}</span>
+      <span class="task__p">${esc(x.p)}</span>
+    </a>
+  </li>`).join("");
+
 /* ---------- Отрасли ---------- */
 const INDUSTRIES = [
   { name: "Торговля и дистрибуция", lead: "Продажи держатся на нескольких менеджерах, а остатки и дебиторка живут в Excel.",
@@ -201,7 +261,8 @@ lead.addEventListener("submit", (e) => {
     `Имя: ${clip(f.name.value, 80)}\n` +
     (clip(f.company.value, 120) ? `Компания: ${clip(f.company.value, 120)}\n` : "") +
     `Телефон: ${cleanPhone(f.phone.value)}\n` +
-    (f.interest.value ? `Интересует: ${f.interest.value}\n` : "") +
+    `Нужно: ${f.intent.value}\n` +
+    (f.interest.value ? `Направление: ${f.interest.value}\n` : "") +
     (clip(f.comment.value, 600) ? `Задача: ${clip(f.comment.value, 600)}` : "") + utmLine();
   track("generate_lead", { form: "contact", interest: f.interest.value || "не выбрано" });
   openWa(text, lead);
@@ -213,6 +274,10 @@ const QUESTIONS = [
   { key: "task", q: "Какая задача главная сейчас?", hint: "Выберите один вариант", opts: ["Увеличить продажи", "Навести порядок в управлении", "Внедрить CRM, ERP или AI", "Нужна комплексная перестройка"] },
   { key: "regs", q: "Есть ли регламенты и KPI?", hint: "Выберите один вариант", opts: ["Нет", "Частично", "Есть, но не работают", "Есть и работают"] },
   { key: "improve", q: "Что хотите улучшить?", hint: "Можно выбрать несколько", multi: true, opts: ["Маркетинг", "Продажи", "Персонал", "Управление", "Финансы", "Всё сразу"] },
+  { key: "industry", q: "В какой отрасли компания?", hint: "Выберите один вариант", opts: ["Торговля и дистрибуция", "Производство", "Услуги и медицина", "Строительство", "Общепит и франшизы", "Другое"] },
+  { key: "branches", q: "Сколько у вас филиалов или точек?", hint: "Выберите один вариант", opts: ["Один офис или точка", "2–5", "Больше 5"] },
+  { key: "systems", q: "Какими системами уже пользуетесь?", hint: "Можно выбрать несколько", multi: true, opts: ["Только Excel и мессенджеры", "1С", "CRM", "ERP", "BI-отчёты"] },
+  { key: "budget", q: "Какой бюджет на проект рассматриваете?", hint: "Ориентир, ни к чему не обязывает", opts: ["До 500 000 ₸", "500 000 – 1 500 000 ₸", "1,5 – 3 млн ₸", "Больше 3 млн ₸", "Пока не знаю"] },
   { key: "when", q: "Когда хотите начать?", hint: "Выберите один вариант", opts: ["В этом месяце", "В ближайшие 1–3 месяца", "Пока изучаю варианты"] }
 ];
 const answers = {};
@@ -265,7 +330,9 @@ function recommend() {
   if (imp.includes("Всё сразу")) Object.values(map).forEach(add);
   imp.forEach((i) => map[i] && add(map[i]));
   if (regs === "Нет" || regs === "Есть, но не работают") add("System");
-  const big = size === "31–100" || size === "Больше 100";
+  const big = size === "31–100" || size === "Больше 100" || answers.branches === "Больше 5";
+  if (answers.branches && answers.branches !== "Один офис или точка") add("Strategy");
+  if ((answers.systems || []).includes("Только Excel и мессенджеры")) add("AI & Tech");
   let pkg;
   if (task === "Нужна комплексная перестройка" || imp.includes("Всё сразу")) {
     pkg = size === "Больше 100" ? { n: "Enterprise", p: "по запросу", d: "Корпоративная трансформация и проектный офис" }
@@ -307,7 +374,8 @@ function renderResult() {
     const text = "Здравствуйте! Прошёл(ла) диагностику на сайте NEXA GROUP.\n\n" +
       `Имя: ${clip(form.elements.name.value, 80)}\nТелефон: ${cleanPhone(form.elements.phone.value)}\n\n` +
       `Сотрудников: ${answers.size}\nГлавная задача: ${answers.task}\nРегламенты и KPI: ${answers.regs}\n` +
-      `Улучшить: ${(answers.improve || []).join(", ")}\nСтарт: ${answers.when}\n\n` +
+      `Улучшить: ${(answers.improve || []).join(", ")}\nОтрасль: ${answers.industry}\nФилиалы: ${answers.branches}\n` +
+      `Системы: ${(answers.systems || []).join(", ")}\nБюджет: ${answers.budget}\nСтарт: ${answers.when}\n\n` +
       `Рекомендация сайта: NEXA ${r.pkg.n} (${r.dirs.join(", ")})` + utmLine();
     track("generate_lead", { form: "diagnostic", package: r.pkg.n });
     openWa(text, form);
