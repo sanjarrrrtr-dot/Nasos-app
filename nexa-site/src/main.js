@@ -216,7 +216,7 @@ $$("#solutions .seg__b").forEach((b) => b.addEventListener("click", () => {
   $$("#solutions .seg__b").forEach((x) => { const on = x === b; x.classList.toggle("is-on", on); x.setAttribute("aria-selected", String(on)); });
   $("#solTasks").hidden = v !== "tasks";
   $("#industries").hidden = v !== "ind";
-  $("#solAll").hidden = v !== "all";
+  if ($("#solAll")) $("#solAll").hidden = v !== "all";
   window.dispatchEvent(new Event("nexa:layout"));
   track("solutions_view", { view: b.dataset.view });
 }));
