@@ -3,7 +3,7 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
-import { playIntro, initPortal, initFlow } from "./motion2.js";
+import { playIntro, initFlow } from "./motion2.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -69,8 +69,7 @@ export function initMotion({ $, $$ }) {
     intro.progress(0);
     playIntro(() => intro.play());
 
-    /* Фирменный «портал» и световые линии в тёмных разделах */
-    initPortal();
+    /* Световые линии в тёмных разделах */
     initFlow(".sec--ink");
 
     // при уходе с первого экрана схема чуть уезжает и уменьшается — ощущение глубины
