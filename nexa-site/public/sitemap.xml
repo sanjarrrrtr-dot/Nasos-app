@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://nexagroup.kz/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url><loc>https://nexagroup.kz/</loc><changefreq>weekly</changefreq><priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://nexagroup.kz/"/><xhtml:link rel="alternate" hreflang="kk" href="https://nexagroup.kz/kz/"/></url>
+  <url><loc>https://nexagroup.kz/kz/</loc><changefreq>weekly</changefreq><priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://nexagroup.kz/"/><xhtml:link rel="alternate" hreflang="kk" href="https://nexagroup.kz/kz/"/></url>
   <url><loc>https://nexagroup.kz/privacy.html</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
 </urlset>

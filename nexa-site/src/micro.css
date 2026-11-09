@@ -67,3 +67,12 @@
 @keyframes waWake { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.12); } 60% { transform: scale(.96); } }
 @media (max-width: 640px) { .wa-fab .wa-tip { display: none; } .foot__cta .btn { width: 100%; } }
 @media (max-width: 640px) { .btn__arrow { display: none; } }
+
+/* Переключатель языка RU / ҚАЗ */
+.lang { text-decoration: none; font: 500 13px var(--f-mono); letter-spacing: .04em; color: var(--ink); padding: 6px 8px; border: 1px solid var(--rule); border-radius: 4px; transition: border-color .2s, color .2s; white-space: nowrap; }
+.lang:hover { border-color: var(--accent); color: var(--accent); }
+.nav__lang { display: none; }
+@media (max-width: 640px) {
+  .top__act .lang { display: none; }
+  .nav .nav__lang { display: block; font-family: var(--f-mono); color: var(--muted); }
+}

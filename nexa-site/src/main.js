@@ -22,6 +22,8 @@ import { initAnalytics, sendGoal } from "./analytics.js";
 initAnalytics();
 import { initMotion } from "./motion.js";
 import { initLab } from "./lab.js";
+import { LANG, tr, fmtT } from "./i18n.js";
+const PRIV = LANG === "kk" ? "../privacy.html" : "./privacy.html";
 
 const WA = "77077799656";
 const waLink = (text) => `https://wa.me/${WA}?text=${encodeURIComponent(text)}`;
@@ -49,7 +51,7 @@ const utm = (() => {
 })();
 const utmLine = () => {
   const k = Object.keys(utm);
-  return k.length ? "\n\nИсточник: " + k.map((x) => `${x.replace("utm_", "")}=${utm[x]}`).join(", ") : "";
+  return k.length ? `\n\n${tr("Источник")}: ` + k.map((x) => `${x.replace("utm_", "")}=${utm[x]}`).join(", ") : "";
 };
 
 /* Открыть WhatsApp; если окно заблокировано, показать обычную ссылку под формой */
@@ -65,7 +67,7 @@ function openWa(text, form) {
     form.appendChild(a);
   }
   a.href = url;
-  a.textContent = w ? "WhatsApp не открылся? Нажмите здесь" : "Открыть WhatsApp с заявкой";
+  a.textContent = tr(w ? "WhatsApp не открылся? Нажмите здесь" : "Открыть WhatsApp с заявкой");
 }
 
 /* ---------- Шапка и меню ---------- */
@@ -75,11 +77,11 @@ const nav = $("#nav");
 const onScroll = () => top.classList.toggle("is-stuck", window.scrollY > 8);
 window.addEventListener("scroll", onScroll, { passive: true });
 onScroll();
-function closeNav() { nav.classList.remove("is-open"); burger.setAttribute("aria-expanded", "false"); burger.setAttribute("aria-label", "Открыть меню"); }
+function closeNav() { nav.classList.remove("is-open"); burger.setAttribute("aria-expanded", "false"); burger.setAttribute("aria-label", tr("Открыть меню")); }
 burger.addEventListener("click", () => {
   const open = nav.classList.toggle("is-open");
   burger.setAttribute("aria-expanded", String(open));
-  burger.setAttribute("aria-label", open ? "Закрыть меню" : "Открыть меню");
+  burger.setAttribute("aria-label", tr(open ? "Закрыть меню" : "Открыть меню"));
 });
 nav.addEventListener("click", (e) => { if (e.target.closest("a")) closeNav(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeNav(); });
@@ -108,13 +110,13 @@ const plist = $("#practicesList");
 plist.innerHTML = PRACTICES.map((p, i) => `
   <article class="pr rv" data-cat="${p.cat}">
     <button class="pr__head" type="button" aria-expanded="false" aria-controls="pr-${p.id}">
-      <span class="pr__name"><small>${esc(p.label)}</small>${esc(p.name)}</span>
-      <span class="pr__res">${esc(p.res)}</span>
+      <span class="pr__name"><small>${esc(tr(p.label))}</small>${esc(p.name)}</span>
+      <span class="pr__res">${esc(tr(p.res))}</span>
       <span class="pr__plus" aria-hidden="true"></span>
     </button>
     <div class="pr__body" id="pr-${p.id}" hidden>
-      <ul class="pr__list">${p.list.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
-      <a class="pr__go" href="${waLink(`Здравствуйте! Интересует направление ${p.name}.`)}" target="_blank" rel="noopener" data-track="wa_practice">Обсудить ${esc(p.name)} в WhatsApp</a>
+      <ul class="pr__list">${p.list.map((x) => `<li>${esc(tr(x))}</li>`).join("")}</ul>
+      <a class="pr__go" href="${waLink(fmtT.practiceMsg(p.name))}" target="_blank" rel="noopener" data-track="wa_practice">${esc(fmtT.practiceBtn(p.name))}</a>
     </div>
   </article>`).join("");
 plist.addEventListener("click", (e) => {
@@ -149,7 +151,7 @@ const DEPTS = [
   const info = document.createElement("p");
   info.className = "board__info";
   info.setAttribute("aria-live", "polite");
-  const hint = touch ? "Нажмите на отдел, чтобы увидеть его ЦКП и KPI." : "Наведите на отдел, чтобы увидеть его ЦКП и KPI.";
+  const hint = tr(touch ? "Нажмите на отдел, чтобы увидеть его ЦКП и KPI." : "Наведите на отдел, чтобы увидеть его ЦКП и KPI.");
   info.textContent = hint;
   $(".board").appendChild(info);
   const show = (i) => {
@@ -158,12 +160,12 @@ const DEPTS = [
     org.classList.toggle("has-focus", i >= 0);
     if (i < 0) { info.textContent = hint; return; }
     const d = DEPTS[i];
-    info.innerHTML = `<b>${esc(d.n)}: ${esc(d.ckp)}</b>KPI: ${esc(d.kpi)}`;
+    info.innerHTML = `<b>${esc(tr(d.n))}: ${esc(tr(d.ckp))}</b>KPI: ${esc(tr(d.kpi))}`;
   };
   nodes.forEach((n, i) => {
     n.setAttribute("tabindex", "0");
     n.setAttribute("role", "button");
-    n.setAttribute("aria-label", `${DEPTS[i].n}: показать ЦКП и KPI`);
+    n.setAttribute("aria-label", fmtT.deptAria(DEPTS[i].n));
     n.addEventListener("mouseenter", () => show(i));
     n.addEventListener("focus", () => show(i));
     n.addEventListener("click", () => { show(n.classList.contains("is-on") && touch ? -1 : i); track("org_node", { dept: DEPTS[i].n }); });
@@ -200,9 +202,9 @@ const TASKS = [
 ];
 $("#tasksList").innerHTML = TASKS.map((x) => `
   <li class="task">
-    <a href="${waLink(`Здравствуйте! Задача: ${x.t.toLowerCase()}. Хочу обсудить.`)}" target="_blank" rel="noopener" data-track="wa_task">
-      <span class="task__t">${esc(x.t)}</span>
-      <span class="task__d">${esc(x.d)}</span>
+    <a href="${waLink(fmtT.taskMsg(x.t))}" target="_blank" rel="noopener" data-track="wa_task">
+      <span class="task__t">${esc(tr(x.t))}</span>
+      <span class="task__d">${esc(tr(x.d))}</span>
       <span class="task__p">${esc(x.p)}</span>
     </a>
   </li>`).join("");
@@ -237,14 +239,14 @@ const INDUSTRIES = [
 ];
 const tabs = $("#indTabs");
 const panel = $("#indPanel");
-tabs.innerHTML = INDUSTRIES.map((x, i) => `<button class="ind__tab" type="button" role="tab" id="ind-t${i}" aria-selected="${i === 0}" aria-controls="indPanel" tabindex="${i === 0 ? 0 : -1}">${esc(x.name)}</button>`).join("");
+tabs.innerHTML = INDUSTRIES.map((x, i) => `<button class="ind__tab" type="button" role="tab" id="ind-t${i}" aria-selected="${i === 0}" aria-controls="indPanel" tabindex="${i === 0 ? 0 : -1}">${esc(tr(x.name))}</button>`).join("");
 function showInd(i) {
   const x = INDUSTRIES[i];
   $$(".ind__tab", tabs).forEach((t, j) => { t.setAttribute("aria-selected", String(i === j)); t.tabIndex = i === j ? 0 : -1; });
   panel.setAttribute("aria-labelledby", `ind-t${i}`);
-  panel.innerHTML = `<p class="ind__lead">${esc(x.lead)}</p>
-    <div><h3>Типичные проблемы</h3><ul>${x.pains.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div>
-    <div class="ind__start"><h3>С чего начинаем</h3><ul>${x.start.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div>`;
+  panel.innerHTML = `<p class="ind__lead">${esc(tr(x.lead))}</p>
+    <div><h3>${tr("Типичные проблемы")}</h3><ul>${x.pains.map((p) => `<li>${esc(tr(p))}</li>`).join("")}</ul></div>
+    <div class="ind__start"><h3>${tr("С чего начинаем")}</h3><ul>${x.start.map((p) => `<li>${esc(tr(p))}</li>`).join("")}</ul></div>`;
   typograph(panel);
 }
 tabs.addEventListener("click", (e) => {
@@ -265,7 +267,7 @@ tabs.addEventListener("keydown", (e) => {
 
 /* ---------- Пакеты: сразу в WhatsApp ---------- */
 $$("[data-package]").forEach((a) => {
-  a.href = waLink(`Здравствуйте! Интересует формат ${a.dataset.package}. Расскажите, пожалуйста, об условиях и сроках.`);
+  a.href = waLink(fmtT.pkgMsg(a.dataset.package));
   a.dataset.track = "wa_package";
 });
 
@@ -278,9 +280,9 @@ function validate(form) {
   const { name, phone, consent, website } = form.elements;
   [name, phone].forEach((i) => i.classList.remove("is-bad"));
   if (website && website.value) return ["spam"];
-  if (clip(name.value, 80).length < 2) { errs.push("укажите имя"); name.classList.add("is-bad"); }
-  if (!validPhone(cleanPhone(phone.value))) { errs.push("проверьте номер телефона"); phone.classList.add("is-bad"); }
-  if (!consent.checked) errs.push("отметьте согласие на обработку данных");
+  if (clip(name.value, 80).length < 2) { errs.push(tr("укажите имя")); name.classList.add("is-bad"); }
+  if (!validPhone(cleanPhone(phone.value))) { errs.push(tr("проверьте номер телефона")); phone.classList.add("is-bad"); }
+  if (!consent.checked) errs.push(tr("отметьте согласие на обработку данных"));
   return errs;
 }
 let lastSend = 0;
@@ -295,13 +297,13 @@ lead.addEventListener("submit", (e) => {
   $("#formError").textContent = errText(errs);
   if (errs.length || tooSoon()) return;
   const f = lead.elements;
-  const text = "Здравствуйте! Заявка с сайта NEXA GROUP.\n\n" +
-    `Имя: ${clip(f.name.value, 80)}\n` +
-    (clip(f.company.value, 120) ? `Компания: ${clip(f.company.value, 120)}\n` : "") +
-    `Телефон: ${cleanPhone(f.phone.value)}\n` +
-    `Нужно: ${f.intent.value}\n` +
-    (f.interest.value ? `Направление: ${f.interest.value}\n` : "") +
-    (clip(f.comment.value, 600) ? `Задача: ${clip(f.comment.value, 600)}` : "") + utmLine();
+  const text = tr("Здравствуйте! Заявка с сайта NEXA GROUP.") + "\n\n" +
+    `${tr("Имя")}: ${clip(f.name.value, 80)}\n` +
+    (clip(f.company.value, 120) ? `${tr("Компания")}: ${clip(f.company.value, 120)}\n` : "") +
+    `${tr("Телефон")}: ${cleanPhone(f.phone.value)}\n` +
+    `${tr("Нужно")}: ${f.intent.value}\n` +
+    (f.interest.value ? `${tr("Направление")}: ${f.interest.value}\n` : "") +
+    (clip(f.comment.value, 600) ? `${tr("Задача")}: ${clip(f.comment.value, 600)}` : "") + utmLine();
   track("generate_lead", { form: "contact", interest: f.interest.value || "не выбрано" });
   openWa(text, lead);
 });
@@ -326,15 +328,15 @@ let started = false;
 function renderQ() {
   const Q = QUESTIONS[step];
   const cur = answers[Q.key] || (Q.multi ? [] : null);
-  qBody.innerHTML = `<p class="quiz__q">${Q.q}</p><p class="quiz__hint">${Q.hint}</p>
-    <div class="quiz__opts" role="${Q.multi ? "group" : "radiogroup"}" aria-label="${esc(Q.q)}">
-    ${Q.opts.map((o) => { const sel = Q.multi ? cur.includes(o) : cur === o; return `<button type="button" class="opt" role="${Q.multi ? "checkbox" : "radio"}" aria-checked="${sel}" data-v="${esc(o)}">${esc(o)}</button>`; }).join("")}
+  qBody.innerHTML = `<p class="quiz__q">${tr(Q.q)}</p><p class="quiz__hint">${tr(Q.hint)}</p>
+    <div class="quiz__opts" role="${Q.multi ? "group" : "radiogroup"}" aria-label="${esc(tr(Q.q))}">
+    ${Q.opts.map((o) => { const sel = Q.multi ? cur.includes(o) : cur === o; return `<button type="button" class="opt" role="${Q.multi ? "checkbox" : "radio"}" aria-checked="${sel}" data-v="${esc(o)}">${esc(tr(o))}</button>`; }).join("")}
     </div>`;
   qBar.style.width = `${((step + 1) / (QUESTIONS.length + 1)) * 100}%`;
-  qCount.textContent = `Вопрос ${step + 1} из ${QUESTIONS.length}`;
+  qCount.textContent = fmtT.quizCount(step + 1, QUESTIONS.length);
   qBack.hidden = step === 0;
   qNext.hidden = false;
-  qNext.textContent = step === QUESTIONS.length - 1 ? "Показать результат" : "Дальше";
+  qNext.textContent = tr(step === QUESTIONS.length - 1 ? "Показать результат" : "Дальше");
   qNext.disabled = Q.multi ? !cur.length : !cur;
 }
 qBody.addEventListener("click", (e) => {
@@ -387,19 +389,19 @@ function recommend() {
 function renderResult() {
   const r = recommend();
   qBar.style.width = "100%";
-  qCount.textContent = "Результат";
+  qCount.textContent = tr("Результат");
   qNext.hidden = true; qBack.hidden = false;
-  qBody.innerHTML = `<p class="quiz__q">Разумно начать с&nbsp;формата ${esc(r.pkg.n)}</p>
-    <div class="res__pkg"><small>Рекомендация</small><b>NEXA ${esc(r.pkg.n)}</b><p>${esc(r.pkg.d)}. ${esc(r.pkg.p)}.</p></div>
-    <p class="quiz__hint">Практики, которые понадобятся:</p>
+  qBody.innerHTML = `<p class="quiz__q">${fmtT.startWith(esc(r.pkg.n))}</p>
+    <div class="res__pkg"><small>${tr("Рекомендация")}</small><b>NEXA ${esc(r.pkg.n)}</b><p>${esc(tr(r.pkg.d))}. ${esc(tr(r.pkg.p))}.</p></div>
+    <p class="quiz__hint">${tr("Практики, которые понадобятся:")}</p>
     <div class="res__dirs">${r.dirs.map((d) => `<span>${esc(d)}</span>`).join("")}</div>
     <form class="res__form" id="quizForm" novalidate>
-      <input name="name" id="q-name" placeholder="Имя" autocomplete="name" maxlength="80" aria-label="Имя">
-      <input name="phone" id="q-phone" type="tel" inputmode="tel" placeholder="Телефон" autocomplete="tel" maxlength="20" aria-label="Телефон">
+      <input name="name" id="q-name" placeholder="${tr("Имя")}" autocomplete="name" maxlength="80" aria-label="${tr("Имя")}">
+      <input name="phone" id="q-phone" type="tel" inputmode="tel" placeholder="${tr("Телефон")}" autocomplete="tel" maxlength="20" aria-label="${tr("Телефон")}">
       <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <label class="consent"><input type="checkbox" name="consent" id="q-consent"> <span>Согласен(на) на&nbsp;обработку персональных данных по&nbsp;<a href="./privacy.html" target="_blank">политике</a></span></label>
+      <label class="consent"><input type="checkbox" name="consent" id="q-consent"> <span>${fmtT.consent(PRIV)}</span></label>
       <p class="form__err" id="quizError" role="alert"></p>
-      <button class="btn btn--primary" type="submit">Получить разбор в&nbsp;WhatsApp</button>
+      <button class="btn btn--primary" type="submit">${LANG === "kk" ? tr("Получить разбор в WhatsApp") : "Получить разбор в&nbsp;WhatsApp"}</button>
     </form>`;
   track("diagnostic_complete", { package: r.pkg.n });
   $("#quizForm").addEventListener("submit", (e) => {
@@ -409,12 +411,13 @@ function renderResult() {
     if (errs[0] === "spam") return;
     $("#quizError").textContent = errText(errs);
     if (errs.length || tooSoon()) return;
-    const text = "Здравствуйте! Прошёл(ла) диагностику на сайте NEXA GROUP.\n\n" +
-      `Имя: ${clip(form.elements.name.value, 80)}\nТелефон: ${cleanPhone(form.elements.phone.value)}\n\n` +
-      `Сотрудников: ${answers.size}\nГлавная задача: ${answers.task}\nРегламенты и KPI: ${answers.regs}\n` +
-      `Улучшить: ${(answers.improve || []).join(", ")}\nОтрасль: ${answers.industry}\nФилиалы: ${answers.branches}\n` +
-      `Системы: ${(answers.systems || []).join(", ")}\nБюджет: ${answers.budget}\nСтарт: ${answers.when}\n\n` +
-      `Рекомендация сайта: NEXA ${r.pkg.n} (${r.dirs.join(", ")})` + utmLine();
+    const L = (k, v) => `${tr(k)}: ${Array.isArray(v) ? v.map(tr).join(", ") : tr(v || "")}\n`;
+    const text = tr("Здравствуйте! Прошёл(ла) диагностику на сайте NEXA GROUP.") + "\n\n" +
+      L("Имя", clip(form.elements.name.value, 80)) + L("Телефон", cleanPhone(form.elements.phone.value)) + "\n" +
+      L("Сотрудников", answers.size) + L("Главная задача", answers.task) + L("Регламенты и KPI", answers.regs) +
+      L("Улучшить", answers.improve || []) + L("Отрасль", answers.industry) + L("Филиалы", answers.branches) +
+      L("Системы", answers.systems || []) + L("Бюджет", answers.budget) + L("Старт", answers.when) + "\n" +
+      `${tr("Рекомендация сайта")}: NEXA ${r.pkg.n} (${r.dirs.join(", ")})` + utmLine();
     track("generate_lead", { form: "diagnostic", package: r.pkg.n });
     openWa(text, form);
   });
@@ -422,6 +425,7 @@ function renderResult() {
 
 /* ---------- Типограф: предлоги не остаются в конце строки ---------- */
 function typograph(root) {
+  if (LANG === "kk") return;
   const SHORT = /(^|[\s(«"])(в|во|и|с|со|к|ко|о|об|у|а|на|по|за|от|до|не|из|для|при|без|или|что|как|под|над|про|же|их|ее|её|мы|вы)\s+/gi;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (n) => /^(SCRIPT|STYLE|TEXTAREA|OPTION|title|text)$/i.test(n.parentNode?.nodeName || "") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
@@ -477,7 +481,7 @@ function animateTo(m, y) {
 function calc() {
   const leads = num("#c-leads", 100000), lost = num("#c-lost", 100), conv = num("#c-conv", 100), check = num("#c-check", 1e10);
   const month = leads * (lost / 100) * (conv / 100) * check;
-  $("#calcFormula").textContent = `${fmt(leads)} заявок × ${lost} % потерь × ${conv} % конверсии × ${fmt(check)} ₸ = ${fmt(month)} ₸ в месяц`;
+  $("#calcFormula").textContent = fmtT.formula(fmt(leads), lost, conv, fmt(check), fmt(month));
   animateTo(month, month * 12);
 }
 $("#calcForm").addEventListener("input", calc);
@@ -505,6 +509,6 @@ initLab({ $, $$, esc, track });
 showInd(0);
 renderQ();
 typograph(document.body);
-initConfigurator({ $, $$, esc, waLink, track });
+initConfigurator({ $, $$, esc, waLink, track, lang: LANG });
 initMicro({ $, $$, track });
 initMotion({ $, $$ });

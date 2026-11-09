@@ -17,9 +17,13 @@
 - `index.html` — разметка и SEO; `src/styles.css` — оформление; `src/main.js` — логика.
 - Практики, задачи, отрасли и отделы схемы редактируются в массивах `PRACTICES`, `TASKS`, `INDUSTRIES`, `DEPTS` в `src/main.js`.
 - Все заявки уходят в WhatsApp +7 707 779 96 56 с текстом, ответами диагностики и UTM.
+- Две языковые версии: русская `index.html` (/) и казахская `kz/index.html` (/kz/), переключатель RU / ҚАЗ в шапке, hreflang в head и sitemap.
+  Тексты, которые рисует скрипт (практики, опрос, конструктор, продукты AI), переводятся словарём `src/i18n.js`;
+  при правке русской строки в `main.js` поправьте ключ и перевод в словаре. Конструктор — объект `T.kk` в `src/configurator.js`.
+  Перевод нужно вычитать носителю языка. Видео и политика конфиденциальности пока только на русском.
 
 ## Перед запуском
-- Домен `nexagroup.kz` в `index.html`, `public/robots.txt`, `public/sitemap.xml` заменить на свой.
-- Вставить ID Google Analytics 4 / GTM — события уже отправляются в `dataLayer`.
+- Домен `nexagroup.kz` в `index.html`, `kz/index.html`, `public/robots.txt`, `public/sitemap.xml` заменить на свой.
+- Вставить ID Google Analytics 4 и Яндекс Метрики в `window.NEXA_CONFIG` в обоих `index.html` — события уже отправляются.
 - Реквизиты юрлица в `public/privacy.html`.
 - Добавить фото основателя и реальные кейсы, когда будут.

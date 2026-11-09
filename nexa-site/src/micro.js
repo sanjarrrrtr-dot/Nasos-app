@@ -1,6 +1,7 @@
 // Микроанимации и детали: «перекатывающиеся» кнопки, магнит, плавные ответы FAQ,
 // копирование номера, время в Астане, кнопка «наверх», подсказка у WhatsApp.
 import gsap from "gsap";
+import { tr } from "./i18n.js";
 
 export function initMicro({ $, $$, track }) {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -53,11 +54,11 @@ export function initMicro({ $, $$, track }) {
   /* ---------- Номер телефона копируется по нажатию ---------- */
   $$("[data-copy]").forEach((b) => b.addEventListener("click", async () => {
     const v = b.dataset.copy;
-    try { await navigator.clipboard.writeText(v); say("Номер скопирован"); }
+    try { await navigator.clipboard.writeText(v); say(tr("Номер скопирован")); }
     catch (e) {
       const r = document.createRange(); r.selectNodeContents(b);
       const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-      say("Номер выделен — нажмите «Копировать»");
+      say(tr("Номер выделен — нажмите «Копировать»"));
     }
     track("phone_copy");
   }));
@@ -80,7 +81,7 @@ export function initMicro({ $, $$, track }) {
   const fab = $(".wa-fab");
   if (fab && !reduce) {
     const tip = document.createElement("span");
-    tip.className = "wa-tip"; tip.textContent = "Есть вопрос? Напишите";
+    tip.className = "wa-tip"; tip.textContent = tr("Есть вопрос? Напишите");
     fab.appendChild(tip);
     setTimeout(() => {
       fab.classList.add("is-wake");

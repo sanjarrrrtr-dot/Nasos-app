@@ -1,3 +1,4 @@
+import { tr } from "./i18n.js";
 // Продукты NEXA AI: список слева, пример интерфейса справа (на телефоне — вкладки-чипсы сверху).
 // Интерфейсы нарисованы HTML-разметкой и подписаны как примеры, это не скриншоты клиентских систем.
 
@@ -78,13 +79,13 @@ export function initLab({ $, $$, esc, track }) {
   if (!tabs || !panel) return;
   tabs.innerHTML = PRODUCTS.map((p, i) =>
     `<button class="lab__tab" type="button" role="tab" id="lab-t${i}" aria-controls="labPanel" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">
-      <span class="lab__n">${String(i + 1).padStart(2, "0")}</span><span>${esc(p.name)}</span></button>`).join("");
+      <span class="lab__n">${String(i + 1).padStart(2, "0")}</span><span>${esc(tr(p.name))}</span></button>`).join("");
   const show = (i) => {
     const p = PRODUCTS[i];
     $$(".lab__tab", tabs).forEach((t, j) => { t.setAttribute("aria-selected", String(i === j)); t.tabIndex = i === j ? 0 : -1; });
     panel.setAttribute("aria-labelledby", `lab-t${i}`);
-    panel.innerHTML = `<div class="lab__screen"><div class="lab__ui">${p.ui}</div><p class="lab__note">пример интерфейса</p></div>
-      <div class="lab__info"><p class="lab__tag">${esc(p.tag)}</p><h3>${esc(p.name)}</h3><p>${esc(p.text)}</p><p class="lab__who">${esc(p.who)}</p></div>`;
+    panel.innerHTML = `<div class="lab__screen"><div class="lab__ui">${p.ui}</div><p class="lab__note">${tr("пример интерфейса")}</p></div>
+      <div class="lab__info"><p class="lab__tag">${esc(tr(p.tag))}</p><h3>${esc(tr(p.name))}</h3><p>${esc(tr(p.text))}</p><p class="lab__who">${esc(tr(p.who))}</p></div>`;
     panel.classList.remove("is-in"); void panel.offsetWidth; panel.classList.add("is-in");
   };
   tabs.addEventListener("click", (e) => {
