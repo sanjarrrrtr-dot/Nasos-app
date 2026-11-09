@@ -1,0 +1,14 @@
+/* Номер раздела «02 / 13» над заголовком: читатель на телефоне видит, где он и сколько осталось */
+.sec-n { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font: 500 12px var(--f-mono); letter-spacing: .08em; color: var(--accent); }
+.sec-n::after { content: ""; width: 32px; height: 1px; background: currentColor; opacity: .5; }
+.sec--ink .sec-n { color: var(--accent-ink); }
+.sec-n b { font-weight: 500; color: var(--ink); }
+.sec--ink .sec-n b { color: #fff; }
+
+/* Полоса прогресса заметнее на телефоне */
+@media (max-width: 640px) { .progress { height: 3px; } }
+
+/* Запасная ссылка под видео */
+.film__alt { margin: 12px 0 0; font-size: 14px; }
+.film__alt a { color: var(--ink-text); text-decoration: underline; text-underline-offset: 3px; }
+.film__alt a.is-hot { color: #fff; background: var(--accent); padding: 8px 12px; border-radius: 4px; text-decoration: none; display: inline-block; }

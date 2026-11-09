@@ -16,6 +16,8 @@ import "./motion2.css";
 import "./micro.css";
 import "./warm.css";
 import "./effects.css";
+import "./sections.css";
+import { initSections } from "./sections.js";
 import { initEffects } from "./effects.js";
 import { initMicro } from "./micro.js";
 import "./configurator.css";
@@ -182,10 +184,14 @@ const DEPTS = [
 {
   const v = $("#filmVideo"), btn = $("#filmToggle");
   const sync = () => { btn.hidden = !v.paused || v.currentTime > 0; };
+  const alt = $("#filmAlt");
   btn.addEventListener("click", () => {
     const p = v.play(); if (p && p.catch) p.catch(() => {});
     track("video_play");
+    // если за 3 секунды видео не пошло (бывает во встроенных браузерах телефонов) — выделяем запасную ссылку
+    setTimeout(() => { if (alt && (v.paused || v.currentTime < 0.2)) { alt.classList.add("is-hot"); btn.hidden = false; } }, 3000);
   });
+  if (alt) alt.addEventListener("click", () => { v.pause(); track("video_open_file"); });
   v.addEventListener("play", () => { btn.hidden = true; if (v.currentTime < 0.5) track("video_start"); });
   v.addEventListener("ended", () => track("video_complete"));
   v.addEventListener("pause", sync);
@@ -510,6 +516,7 @@ if ("IntersectionObserver" in window) {
 }
 
 initLab({ $, $$, esc, track });
+initSections();
 showInd(0);
 renderQ();
 typograph(document.body);
