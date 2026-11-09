@@ -1,0 +1,69 @@
+/* ---------- Кнопки ---------- */
+.btn { position: relative; overflow: hidden; isolation: isolate; transition: background .25s, color .25s, border-color .25s, box-shadow .25s, transform .15s var(--ease); }
+.btn:active { transform: scale(.97); }
+.btn__roll { position: relative; display: inline-grid; overflow: hidden; height: 1.25em; line-height: 1.25; }
+.btn__t { grid-area: 1 / 1; transition: transform .45s cubic-bezier(.7, 0, .2, 1); }
+.btn__t + .btn__t { transform: translateY(110%); }
+.btn:hover .btn__t:first-child, .btn:focus-visible .btn__t:first-child { transform: translateY(-110%); }
+.btn:hover .btn__t + .btn__t, .btn:focus-visible .btn__t + .btn__t { transform: translateY(0); }
+.btn__arrow { display: inline-block; transition: transform .35s cubic-bezier(.7, 0, .2, 1); }
+.btn:hover .btn__arrow { transform: translateX(4px); }
+/* у контурных кнопок фон «заливается» снизу */
+.btn--line::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--ink); transform: translateY(101%); transition: transform .45s cubic-bezier(.7, 0, .2, 1); }
+.btn--line:hover { background: transparent; color: #fff; }
+.btn--line:hover::before { transform: translateY(0); }
+.btn--primary:hover { box-shadow: 0 10px 24px -12px rgba(15, 118, 110, .7); }
+@media (prefers-reduced-motion: reduce) { .btn__t, .btn__arrow, .btn--line::before { transition: none; } }
+
+/* ---------- Ссылки: подчёркивание растёт слева ---------- */
+.pr__go, .hero__alt, .foot nav a, .foot__c a, .contact__list a, .consent a {
+  text-decoration: none; background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .35s cubic-bezier(.7, 0, .2, 1), color .2s;
+}
+.pr__go:hover, .hero__alt:hover, .foot nav a:hover, .foot__c a:hover, .contact__list a:hover, .consent a:hover { background-size: 100% 1px; }
+.hero__alt { background-size: 100% 1px; background-image: linear-gradient(var(--rule), var(--rule)); }
+.hero__alt:hover { background-image: linear-gradient(var(--ink), var(--ink)); }
+
+/* ---------- Карточки и строки: отклик на наведение ---------- */
+.task a, .pr__head, .lab__tab, .ind__tab, .opt { transition: background .2s, color .2s, border-color .2s, transform .2s var(--ease); }
+.opt:active { transform: scale(.98); }
+.pr__head:hover .pr__name { color: var(--accent); }
+.price { transition: background .25s, transform .3s var(--ease), box-shadow .3s; }
+@media (hover: hover) { .price:not(.price--main):hover { background: var(--sheet); box-shadow: 0 20px 40px -30px rgba(16, 24, 39, .4); } }
+
+/* ---------- Подвал ---------- */
+.foot { overflow: hidden; }
+.foot__cta { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 48px; margin-bottom: 48px; border-bottom: 1px solid var(--ink-rule); }
+.foot__q { font: 600 clamp(28px, 4vw, 56px)/1.05 var(--f-display); letter-spacing: -.03em; color: #fff; margin: 0; }
+.foot__phone { border: 0; padding: 0; background: none; color: #fff; font: 500 15px var(--f-mono); text-align: left; cursor: copy; }
+.foot__phone:hover { color: var(--accent-ink); }
+.foot__time { font: 500 13px var(--f-mono); color: var(--ink-text); }
+.foot__time::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #3DD68C; margin-right: 8px; vertical-align: 1px; box-shadow: 0 0 0 3px rgba(61, 214, 140, .18); }
+.foot__word {
+  margin-top: 40px; text-align: center; white-space: nowrap; user-select: none;
+  font: 700 clamp(96px, 26vw, 420px)/.78 var(--f-display); letter-spacing: -.05em;
+  color: transparent;
+  background: linear-gradient(180deg, rgba(95, 196, 184, .22), rgba(95, 196, 184, .03) 75%); -webkit-background-clip: text; background-clip: text;
+}
+.foot__copy { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+.foot__up { border: 1px solid var(--ink-rule); background: none; color: var(--ink-text); border-radius: 999px; padding: 7px 14px; font: 500 12px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; transition: border-color .2s, color .2s; }
+.foot__up:hover { border-color: var(--ink-text); color: #fff; }
+
+/* ---------- Уведомление ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 300;
+  transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+  padding: 10px 16px; border-radius: 999px; background: var(--ink); color: #fff; font: 500 14px var(--f-body);
+  box-shadow: 0 16px 32px -16px rgba(0, 0, 0, .5); transition: opacity .25s, transform .35s var(--ease);
+}
+.toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- WhatsApp: мягкий импульс и подсказка ---------- */
+.wa-fab .wa-tip {
+  position: absolute; right: calc(100% + 12px); top: 50%; transform: translate(8px, -50%); opacity: 0; pointer-events: none; white-space: nowrap;
+  padding: 8px 12px; border-radius: 8px; background: var(--ink); color: #fff; font: 500 14px var(--f-body); transition: opacity .3s, transform .3s var(--ease);
+}
+.wa-fab.is-wake .wa-tip, .wa-fab:hover .wa-tip { opacity: 1; transform: translate(0, -50%); }
+.wa-fab.is-wake { animation: waWake 1.2s var(--ease) 2; }
+@keyframes waWake { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.12); } 60% { transform: scale(.96); } }
+@media (max-width: 640px) { .wa-fab .wa-tip { display: none; } .foot__cta .btn { width: 100%; } }
+@media (max-width: 640px) { .btn__arrow { display: none; } }

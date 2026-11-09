@@ -13,6 +13,8 @@ import "./interact.css";
 import "./lab.css";
 import "./motion.css";
 import "./motion2.css";
+import "./micro.css";
+import { initMicro } from "./micro.js";
 import { initMotion } from "./motion.js";
 import { initLab } from "./lab.js";
 
@@ -498,4 +500,5 @@ initLab({ $, $$, esc, track });
 showInd(0);
 renderQ();
 typograph(document.body);
+initMicro({ $, $$, track });
 initMotion({ $, $$ });
