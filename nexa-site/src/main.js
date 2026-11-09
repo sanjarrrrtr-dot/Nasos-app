@@ -163,23 +163,20 @@ const DEPTS = [
   org.addEventListener("focusout", (e) => { if (!org.contains(e.relatedTarget)) show(-1); });
 }
 
-/* ---------- Видео: играет, когда на экране; не играет само при «уменьшить движение» ---------- */
+/* ---------- Видео о компании: запускается только по нажатию (со звуком), пауза при уходе с экрана ---------- */
 {
   const v = $("#filmVideo"), btn = $("#filmToggle");
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let userPaused = reduce;
-  const sync = () => { btn.textContent = v.paused ? "Смотреть" : "Пауза"; btn.setAttribute("aria-pressed", String(v.paused)); };
-  const tryPlay = () => { const p = v.play(); if (p && p.catch) p.catch(() => sync()); };
+  const sync = () => { btn.hidden = !v.paused || v.currentTime > 0; };
   btn.addEventListener("click", () => {
-    if (v.paused) { userPaused = false; tryPlay(); track("video_play"); } else { userPaused = true; v.pause(); }
+    const p = v.play(); if (p && p.catch) p.catch(() => {});
+    track("video_play");
   });
-  v.addEventListener("play", sync); v.addEventListener("pause", sync);
+  v.addEventListener("play", () => { btn.hidden = true; if (v.currentTime < 0.5) track("video_start"); });
+  v.addEventListener("ended", () => track("video_complete"));
+  v.addEventListener("pause", sync);
   if ("IntersectionObserver" in window) {
-    new IntersectionObserver((en) => {
-      if (en[0].isIntersecting) { if (!userPaused) tryPlay(); } else v.pause();
-    }, { threshold: 0.4 }).observe(v);
+    new IntersectionObserver((en) => { if (!en[0].isIntersecting && !v.paused) v.pause(); }, { threshold: 0.2 }).observe(v);
   }
-  sync();
 }
 
 /* ---------- Решения по задачам ---------- */

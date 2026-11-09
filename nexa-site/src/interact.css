@@ -86,3 +86,13 @@
 .film__toggle:hover { border-color: #fff; }
 @media (max-width: 960px) { .film { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
 @media (max-width: 640px) { .film__frame { margin: 0 calc(var(--gut) * -1 + 4px); } }
+
+/* Кнопка «Смотреть» поверх обложки видео */
+.film__play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: inline-flex; align-items: center; gap: 10px; padding: 16px 26px; border: 0; border-radius: 999px;
+  background: var(--accent); color: #fff; font: 600 17px var(--f-body); box-shadow: 0 16px 36px -12px rgba(0, 0, 0, .55);
+  transition: transform .2s var(--ease), background .2s;
+}
+.film__play:hover { transform: translate(-50%, -50%) scale(1.04); background: #0B5F58; }
+.film__play span { font-size: 14px; }

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<style>
+@font-face { font-family: "Unbounded"; font-weight: 600; src: url("fonts/unbounded-600.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Unbounded"; font-weight: 600; src: url("fonts/unbounded-600-lat.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+20B8; }
+@font-face { font-family: "Unbounded"; font-weight: 700; src: url("fonts/unbounded-700.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Unbounded"; font-weight: 700; src: url("fonts/unbounded-700-lat.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+20B8; }
+@font-face { font-family: "Inter"; font-weight: 500; src: url("fonts/inter-500.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Inter"; font-weight: 500; src: url("fonts/inter-500-lat.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+20B8; }
+@font-face { font-family: "Inter"; font-weight: 600; src: url("fonts/inter-600.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Inter"; font-weight: 600; src: url("fonts/inter-600-lat.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+20B8; }
+@font-face { font-family: "Plex"; font-weight: 500; src: url("fonts/plex-500.woff2") format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Plex"; font-weight: 500; src: url("fonts/plex-500-lat.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+20B8; }
+:root { --ink: #101827; --paper: #F3F5F7; --accent: #0F766E; --mint: #5FC4B8; --muted: #64748B; --rule: #D6DCE4; --red: #B42318; }
+html, body { margin: 0; overflow: hidden; background: var(--ink); }
+body.h { width: 1280px; height: 720px; }
+body.v { width: 1080px; height: 1920px; }
+/* Сцена 16:9; в вертикальной версии масштабируется и стоит посередине */
+#stage { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; overflow: hidden; transform-origin: 0 0; font-family: Inter, sans-serif; color: var(--ink);
+  background: var(--paper); background-image: linear-gradient(#E6EAEF 1px, transparent 1px), linear-gradient(90deg, #E6EAEF 1px, transparent 1px); background-size: 32px 32px; }
+body.v #stage { top: 520px; transform: scale(.84375); }
+.abs { position: absolute; }
+.kicker { font: 500 14px Plex, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.title { font: 700 38px/1.12 Unbounded, sans-serif; letter-spacing: -.03em; }
+.title b { color: var(--accent); font-weight: 700; }
+.box { position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; text-align: center;
+  background: #fff; border: 1.5px solid var(--ink); border-radius: 4px; font: 600 15px/1.2 Inter, sans-serif; padding: 0 10px; }
+.box.dark { background: var(--ink); color: #fff; }
+.chip { position: absolute; padding: 9px 14px; background: #fff; border: 1.5px solid var(--ink); border-radius: 4px; font: 600 15px Inter, sans-serif; white-space: nowrap; }
+.doc { position: absolute; background: #fff; border: 1px solid var(--rule); box-shadow: 0 24px 40px -28px rgba(16,24,39,.5); padding: 20px 22px; box-sizing: border-box; }
+.doc h4 { margin: 0 0 4px; font: 500 12px Plex, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.doc h3 { margin: 0 0 14px; font: 600 20px Unbounded, sans-serif; letter-spacing: -.02em; }
+.row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--rule); font-size: 15px; }
+.row em { font: 500 13px Plex, monospace; font-style: normal; }
+.bad { color: var(--red); } .ok { color: var(--accent); }
+svg.lines { position: absolute; inset: 0; }
+svg.lines path { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+.bar { position: relative; height: 16px; background: #E6EAEF; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+.bar.low i { background: var(--red); }
+.bar::after { content: ""; position: absolute; top: -5px; bottom: -5px; left: 83.33%; border-left: 1.5px dashed var(--ink); }
+.dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.end { position: absolute; inset: 0; background: var(--ink); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+.end img { height: 92px; }
+.end p { margin: 0; font: 700 36px Unbounded, sans-serif; letter-spacing: -.03em; }
+.end .wa { display: flex; align-items: center; gap: 14px; padding: 14px 26px; border-radius: 6px; background: #1FAF5A; font: 600 26px Inter, sans-serif; }
+.end small { font: 500 15px Plex, monospace; letter-spacing: .1em; color: #C3CBD8; }
+/* Субтитры */
+#sub { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); max-width: 1080px; padding: 10px 18px; border-radius: 6px;
+  background: rgba(16,24,39,.88); color: #fff; font: 500 22px/1.35 Inter, sans-serif; text-align: center; box-sizing: border-box; }
+#vsub { display: none; }
+body.v #vsub { display: block; position: absolute; left: 60px; right: 60px; top: 1190px; color: #fff; font: 500 44px/1.35 Inter, sans-serif; }
+body.v #sub { display: none; }
+body.v #sub_old { position: absolute; left: 60px; right: 60px; transform: none; max-width: none; top: 1180px; bottom: auto; font-size: 40px; padding: 22px 28px; background: transparent; }
+/* Вертикальная версия: шапка с логотипом и названием сцены */
+#vhead { display: none; }
+body.v #vhead { display: block; position: absolute; left: 60px; right: 60px; top: 150px; color: #fff; }
+#vhead img { height: 64px; }
+#vhead .k { margin-top: 70px; font: 500 26px Plex, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--mint); }
+#vhead .t { margin-top: 18px; font: 700 54px/1.12 Unbounded, sans-serif; letter-spacing: -.03em; }
+#vhead .t b { color: var(--mint); font-weight: 700; }
+#vfoot { display: none; }
+body.v #vfoot { display: block; position: absolute; left: 60px; right: 60px; bottom: 150px; color: #C3CBD8; font: 500 26px Plex, monospace; letter-spacing: .08em; }
+</style></head>
+<body class="h">
+<div id="vhead"><img src="logo-white.svg" alt=""><div class="k" id="vk"></div><div class="t" id="vt"></div></div>
+<div id="stage">
+  <div class="abs kicker" id="kick" style="left:64px;top:48px"></div>
+  <div class="abs title" id="ttl" style="left:64px;top:74px;max-width:1150px"></div>
+  <svg class="lines" width="1280" height="720"><path id="orgLines" d="M640 257 V290 M640 336 V368 M175 368 H1105 M175 368 V388 M407 368 V388 M640 368 V388 M873 368 V388 M1105 368 V388"/></svg>
+  <div id="layer"></div>
+  <div class="end" id="end"><img src="logo-white.svg" alt=""><p>Начните с&nbsp;диагностики</p>
+    <div class="wa"><svg width="32" height="32" viewBox="0 0 32 32"><path fill="#fff" d="M16 3C8.8 3 3 8.7 3 15.8c0 2.3.6 4.5 1.8 6.4L3 29l7-1.8c1.9 1 3.9 1.5 6 1.5 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.4c-1.9 0-3.8-.5-5.4-1.5l-.4-.2-4.1 1.1 1.1-4-.3-.4c-1.1-1.7-1.7-3.6-1.7-5.6C5.2 10 10 5.3 16 5.3S26.8 10 26.8 15.8 22 26.4 16 26.4z"/></svg>+7 707 779 96 56</div>
+    <small>NEXA GROUP · УПРАВЛЕНЧЕСКИЙ КОНСАЛТИНГ · АСТАНА</small></div>
+  <div id="sub"></div>
+</div>
+<div id="vsub"></div>
+<div id="vfoot">NEXA GROUP · АСТАНА</div>
+<script>
+const SCHED = __SCHED__;
+const S = SCHED.scenes, TOTAL = SCHED.total;
+const clamp = (v) => Math.max(0, Math.min(1, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const ease = (k) => 1 - Math.pow(1 - k, 3);
+const eio = (k) => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const $ = (id) => document.getElementById(id);
+const layer = $("layer");
+function el(html, cls, style) { const d = document.createElement("div"); if (cls) d.className = cls; if (style) d.style.cssText = style; d.innerHTML = html; layer.appendChild(d); return d; }
+const set = (e, o, x = 0, y = 0, s = 1, r = 0) => { e.style.opacity = o; e.style.transform = `translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`; };
+
+const TITLES = [
+  ["Сейчас", "Всё держится на&nbsp;<b>собственнике</b>"],
+  ["Сейчас", "Отделы работают <b>вразнобой</b>"],
+  ["Шаг 1 · Диагностика", "Находим, где <b>теряются деньги</b>"],
+  ["Шаг 2 · Проектирование", "У&nbsp;каждого отдела — <b>свой результат</b>"],
+  ["Шаг 3 · Внедрение", "Регламенты, CRM и&nbsp;<b>AI</b>"],
+  ["Шаг 4 · Контроль", "Цифры, а&nbsp;не&nbsp;<b>догадки</b>"],
+  ["Результат", "Бизнес работает <b>без&nbsp;вас</b>"],
+  ["", ""]
+];
+
+/* ---------- Сцена 1-2: собственник и вопросы ---------- */
+const owner = el("Собственник", "box dark", "left:555px;top:330px;width:170px;height:56px");
+const QS = ["Где договор?", "Кто звонил клиенту?", "Скидку согласовали?", "Отчёт будет?", "Кто отвечает?", "Заявка потерялась", "Счёт оплатили?", "Почему план не выполнен?"];
+const QPOS = [[90, 200], [930, 185], [110, 450], [960, 470], [330, 540], [700, 545], [250, 320], [880, 330]];
+const qs = QS.map((q) => el(q, "chip", "left:0;top:0"));
+const counter = el("", "abs kicker", "left:490px;top:396px;width:300px;text-align:center;color:#B42318");
+// хаос отделов (сцена 2)
+const DEP = ["Продажи", "Маркетинг", "Операции", "Финансы", "Персонал"];
+const DPOS_CHAOS = [[150, 250, -8], [470, 210, 6], [820, 260, -4], [300, 470, 9], [760, 470, -10]];
+const deps = DEP.map((d) => el(d, "box", "left:0;top:0;width:170px;height:54px"));
+const lowChart = el(`<div class="kicker" style="margin-bottom:10px">План продаж</div><div class="bar low"><i></i></div><div class="kicker bad" style="margin-top:8px">выполнен на <span>0</span> %</div>`, "abs", "left:900px;top:560px;width:300px");
+const leads = Array.from({ length: 10 }, () => el("", "dot", "left:0;top:0;background:#B42318"));
+
+/* ---------- Сцена 3: карта проблем ---------- */
+const map = el(`<h4>Диагностика · пример</h4><h3>Карта проблем</h3>
+  <div class="row"><span>Заявки без ответа</span><em class="bad">20 %</em></div>
+  <div class="row"><span>Нет ЦКП у отделов</span><em class="bad">5 из 5</em></div>
+  <div class="row"><span>Регламенты</span><em class="bad">нет</em></div>
+  <div class="row"><span>Решения через собственника</span><em class="bad">90 %</em></div>`, "doc", "left:330px;top:190px;width:620px");
+const mapRows = [...map.querySelectorAll(".row")];
+
+/* ---------- Сцена 4: оргструктура ---------- */
+const SLOT = [[640, 229], [640, 313], [175, 415], [407, 415], [640, 415], [873, 415], [1105, 415]];
+const director = el("Директор", "box", "left:0;top:0;width:170px;height:46px");
+const CKP = [["план продаж", "конверсия"], ["заявки в бюджете", "CPL, ROMI"], ["работа по SOP", "SLA"], ["отчёт в срок", "P&L, ДДС"], ["команда в штате", "текучесть"]];
+const tags = CKP.map((c, i) => el(`<div class="kicker ok" style="color:#0F766E">ЦКП</div><div style="font:500 15px Inter;margin-top:4px">${c[0]}</div><div style="font:500 13px Plex,monospace;margin-top:6px">KPI: ${c[1]}</div>`, "abs", `left:${SLOT[i + 2][0] - 95}px;top:456px;width:190px;text-align:center`));
+const orgLines = $("orgLines"); const LEN = 2400; orgLines.style.strokeDasharray = LEN;
+
+/* ---------- Сцена 5: три документа ---------- */
+const d1 = el(`<h4>Регламент</h4><h3>Паспорт процесса</h3><div class="row"><span>Владелец</span><em>РОП</em></div><div class="row"><span>SLA</span><em>15 минут</em></div><div class="row"><span>Контроль</span><em>ежедневно</em></div>`, "doc", "left:64px;top:190px;width:360px");
+const d2 = el(`<h4>CRM</h4><h3>Воронка сделок</h3><div class="row"><span>Новые</span><em>12</em></div><div class="row"><span>КП отправлено</span><em>7</em></div><div class="row"><span>Оплачено</span><em class="ok">4</em></div>`, "doc", "left:460px;top:190px;width:360px");
+const d3 = el(`<h4>AI-ассистент</h4><h3>Ответ сотруднику</h3><div style="background:#DDF2EE;padding:10px 12px;border-radius:8px;font-size:15px;line-height:1.4">Скидка до 5 % без согласования. Источник: регламент продаж, п. 4.2</div>`, "doc", "left:856px;top:190px;width:360px");
+
+/* ---------- Сцена 6: план-факт ---------- */
+const PF = [80, 92, 104, 111];
+const pf = el(`<h4>Еженедельный отчёт · пример</h4><h3>План-факт отдела продаж</h3>${PF.map((v, i) => `<div style="display:grid;grid-template-columns:70px 1fr 64px;gap:14px;align-items:center;margin-top:14px;font:500 15px Plex,monospace"><span>Нед. ${i + 1}</span><div class="bar"><i></i></div><b style="font:600 17px Inter;text-align:right">0 %</b></div>`).join("")}`, "doc", "left:290px;top:190px;width:700px");
+const pfRows = [...pf.querySelectorAll(".bar i")], pfNums = [...pf.querySelectorAll("b")];
+
+/* ---------- Сцена 7: система работает сама + 8 практик ---------- */
+const flow = Array.from({ length: 8 }, () => el("", "dot", "left:0;top:0"));
+const PR = ["Strategy", "System", "Marketing", "Sales", "AI & Tech", "People", "Finance", "Academy"];
+const prs = PR.map((p, i) => el(p, "chip", `left:${190 + (i % 4) * 240}px;top:${470 + Math.floor(i / 4) * 52}px;font:600 14px Plex,monospace;letter-spacing:.04em`));
+
+const kick = $("kick"), ttl = $("ttl"), sub = $("sub"), end = $("end"), vk = $("vk"), vt = $("vt");
+const vsub = $("vsub");
+
+function sceneAt(t) { let i = 0; for (let k = 0; k < S.length; k++) if (t >= S[k].start - .35) i = k; return i; }
+function subtitle(t) {
+  const i = S.findIndex((s) => t >= s.start - .1 && t <= s.start + s.dur + .25);
+  if (i < 0) return "";
+  const parts = S[i].text.match(/[^.!?]+[.!?]?/g).map((x) => x.trim()).filter(Boolean);
+  // делим фразу на предложения пропорционально длине
+  const total = parts.reduce((a, p) => a + p.length, 0); let acc = 0;
+  const k = (t - S[i].start) / S[i].dur;
+  for (const p of parts) { acc += p.length; if (k <= acc / total + .02) return p; }
+  return parts[parts.length - 1];
+}
+
+function render(t) {
+  const sc = sceneAt(t);
+  const isV = document.body.classList.contains("v");
+  const st = (n) => S[n].start, en = (n) => n + 1 < S.length ? S[n + 1].start : TOTAL;
+  // заголовки сцены (на вертикальной версии — в шапке)
+  const tf = clamp(Math.min((t - st(sc) + .35) / .4, (en(sc) - .2 - t) / .3));
+  const [k, h] = TITLES[sc];
+  if (isV) { vk.textContent = k; vt.innerHTML = h; vk.style.opacity = vt.style.opacity = tf; kick.style.opacity = ttl.style.opacity = 0; }
+  else { kick.textContent = k; ttl.innerHTML = h; kick.style.opacity = ttl.style.opacity = tf; }
+  const s = sc === 7 ? "" : subtitle(t); sub.textContent = s; sub.style.opacity = s ? 1 : 0; vsub.textContent = s;
+
+  // ---- 1: собственник + вопросы, 2: вопросы улетают, отделы в хаосе
+  const o1 = ease(seg(t, 0, .6));
+  const toOrg = eio(seg(t, st(3), st(3) + 1.6));            // собственник уходит наверх в оргсхему
+  const ox = 0, oy = (229 - 358) * toOrg;
+  const ownerOut = seg(t, st(6) + 1.2, st(6) + 2.4);         // в сцене 7 собственник «отходит»
+  const ownerVis = t < st(2) - .3 || (t > st(3) - .2 && (t < st(4) - .2 || t >= st(6)));
+  set(owner, o1 * (1 - .65 * ownerOut) * (ownerVis ? 1 : 0), ox, oy - 20 * ownerOut);
+  qs.forEach((q, i) => {
+    const kin = ease(seg(t, .4 + i * .45, 1.2 + i * .45));
+    const [px, py] = QPOS[i];
+    const pull = eio(seg(t, st(1) - .2, st(1) + .6));
+    const fx = 640 - 80, fy = 340;
+    const x = px + (fx - px) * .18 * Math.sin(t * 1.5 + i) * (1 - pull);
+    const y = py + Math.cos(t * 1.3 + i) * 6;
+    q.style.left = "0"; q.style.top = "0";
+    set(q, kin * (1 - pull), x, y, 1, Math.sin(t * 2 + i) * 3);
+  });
+  counter.textContent = "вопросов сегодня: " + Math.round(37 * seg(t, .4, st(1) - .5));
+  counter.style.opacity = (1 - seg(t, st(1) - .3, st(1))) * seg(t, .5, 1);
+  deps.forEach((d, i) => {
+    const [cx, cy, cr] = DPOS_CHAOS[i];
+    const kin = ease(seg(t, st(1) + i * .12, st(1) + .6 + i * .12));
+    const ord = eio(seg(t, st(3) + .3 + i * .08, st(3) + 1.8 + i * .08));
+    const [ex, ey] = SLOT[i + 2];
+    const x = cx + (ex - 85 - cx) * ord + Math.sin(t * 2.2 + i) * 6 * (1 - ord);
+    const y = cy + (ey - 27 - cy) * ord + Math.cos(t * 1.8 + i) * 5 * (1 - ord);
+    const vis = t < st(2) - .2 ? kin : (t >= st(3) ? 1 : 0);
+    set(d, vis * (t >= st(4) - .2 && t < st(6) ? 0 : 1), x, y, 1, cr * (1 - ord) * (t < st(3) ? 1 : 1));
+  });
+  // падающие заявки (сцена 2)
+  leads.forEach((p, i) => {
+    const ph = ((t - st(1)) * .9 + i * .37) % 1.6;
+    const vis = t > st(1) + .3 && t < st(2) - .3 ? 1 : 0;
+    set(p, vis * clamp(1 - ph / 1.6), 120 + i * 105, 160 + ph * 360);
+  });
+  const lk = ease(seg(t, st(1) + 1.6, st(1) + 3));
+  lowChart.style.opacity = t < st(2) - .2 ? lk : 0;
+  lowChart.querySelector("i").style.width = (72 / 120 * 100 * lk) + "%";
+  lowChart.querySelector("span").textContent = Math.round(72 * lk);
+
+  // ---- 3: карта проблем
+  const m = ease(seg(t, st(2) - .1, st(2) + .5)) * (1 - seg(t, st(3) - .3, st(3)));
+  set(map, m, 0, (1 - m) * 20);
+  mapRows.forEach((r, i) => { const k = ease(seg(t, st(2) + .6 + i * .7, st(2) + 1 + i * .7)); r.style.opacity = k; r.style.transform = `translateX(${(1 - k) * 16}px)`; });
+
+  // ---- 4: оргструктура
+  const dk = ease(seg(t, st(3) + .5, st(3) + 1.3));
+  const orgVis = t >= st(3) && (t < st(4) - .2 || t >= st(6)) ? 1 : 0;
+  set(director, dk * orgVis, SLOT[1][0] - 85, SLOT[1][1] - 23);
+  orgLines.style.strokeDashoffset = LEN * (1 - ease(seg(t, st(3) + 1.6, st(3) + 3)));
+  orgLines.style.opacity = orgVis;
+  tags.forEach((g, i) => { const k = ease(seg(t, st(3) + 2.6 + i * .3, st(3) + 3.2 + i * .3)); set(g, k * (t < st(4) - .2 ? 1 : 0), 0, (1 - k) * 10); });
+
+  // ---- 5: три документа
+  [d1, d2, d3].forEach((d, i) => { const k = ease(seg(t, st(4) - .1 + i * .9, st(4) + .5 + i * .9)) * (1 - seg(t, st(5) - .3, st(5))); set(d, k, 0, (1 - k) * 24); });
+
+  // ---- 6: план-факт
+  const pk = ease(seg(t, st(5) - .1, st(5) + .5)) * (1 - seg(t, st(6) - .3, st(6)));
+  set(pf, pk, 0, (1 - pk) * 20);
+  pfRows.forEach((r, i) => { const k = ease(seg(t, st(5) + .5 + i * .5, st(5) + 1.5 + i * .5)); r.style.width = (PF[i] / 120 * 100 * k) + "%"; pfNums[i].textContent = Math.round(PF[i] * k) + " %"; });
+
+  // ---- 7: схема работает сама, точки бегут по линиям, 8 практик
+  const r7 = t >= st(6) && t < st(7) - .2;
+  flow.forEach((p, i) => {
+    const ph = ((t - st(6)) * .45 + i / 8) % 1;
+    const tx = SLOT[2 + (i % 5)][0];
+    const path = ph < .4 ? [640, 336 + (368 - 336) * ph / .4] : ph < .75 ? [640 + (tx - 640) * (ph - .4) / .35, 368] : [tx, 368 + 30 * (ph - .75) / .25];
+    set(p, r7 ? ease(seg(t, st(6) + .3, st(6) + .9)) : 0, path[0] - 5, path[1] - 5);
+  });
+  prs.forEach((p, i) => { const k = ease(seg(t, st(6) + 3.2 + i * .18, st(6) + 3.7 + i * .18)); set(p, r7 ? k : 0, 0, (1 - k) * 10); });
+
+  // ---- 8: финальная карточка
+  const ek = ease(seg(t, st(7) - .3, st(7) + .4));
+  end.style.opacity = ek;
+  end.querySelector(".wa").style.transform = `scale(${.94 + .06 * ease(seg(t, st(7) + .6, st(7) + 1.2))})`;
+}
+window.render = render;
+render(0);
+</script>
+</body></html>
