@@ -15,6 +15,11 @@ import "./motion.css";
 import "./motion2.css";
 import "./micro.css";
 import { initMicro } from "./micro.js";
+import "./configurator.css";
+import { initConfigurator } from "./configurator.js";
+import { initAnalytics, sendGoal } from "./analytics.js";
+
+initAnalytics();
 import { initMotion } from "./motion.js";
 import { initLab } from "./lab.js";
 
@@ -28,7 +33,7 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 window.dataLayer = window.dataLayer || [];
 function track(event, params = {}) {
   window.dataLayer.push({ event, ...params });
-  if (typeof window.gtag === "function") window.gtag("event", event, params);
+  sendGoal(event, params);
 }
 
 /* UTM-метки сохраняем и добавляем в текст заявки */
@@ -500,5 +505,6 @@ initLab({ $, $$, esc, track });
 showInd(0);
 renderQ();
 typograph(document.body);
+initConfigurator({ $, $$, esc, waLink, track });
 initMicro({ $, $$, track });
 initMotion({ $, $$ });

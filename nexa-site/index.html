@@ -18,6 +18,8 @@
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <!-- Аналитика: впишите ID счётчиков. Пока пусто — счётчики не загружаются. -->
+  <script>window.NEXA_CONFIG = { ga4: "", ym: "" };</script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -437,6 +439,31 @@
             <ul><li>Корпоративная трансформация</li><li>Проектный офис</li><li>Тиражирование на&nbsp;филиалы</li></ul>
             <a class="btn btn--line" target="_blank" rel="noopener" data-package="NEXA ENTERPRISE" href="#contact">Обсудить</a>
           </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Конструктор проекта -->
+    <section class="sec sec--sheet" id="build">
+      <div class="wrap">
+        <header class="row-head">
+          <div>
+            <h2 class="h2">Соберите свой проект</h2>
+            <p class="sub">Отметьте, что нужно компании. Покажем состав работ, ориентир по&nbsp;срокам и&nbsp;подходящий формат. Точный расчёт — после диагностики.</p>
+          </div>
+        </header>
+        <div class="cfg">
+          <div class="cfg__pick">
+            <p class="cfg__label" id="cfgSizeLbl">Размер компании</p>
+            <div class="seg cfg__size" role="radiogroup" aria-labelledby="cfgSizeLbl" id="cfgSize">
+              <button class="seg__b is-on" type="button" role="radio" aria-checked="true" data-size="s">до 30 человек</button>
+              <button class="seg__b" type="button" role="radio" aria-checked="false" data-size="m">31–100</button>
+              <button class="seg__b" type="button" role="radio" aria-checked="false" data-size="l">больше 100</button>
+            </div>
+            <p class="cfg__label" id="cfgPrLbl">Что нужно</p>
+            <div class="cfg__grid" role="group" aria-labelledby="cfgPrLbl" id="cfgPractices"><!-- configurator.js --></div>
+          </div>
+          <aside class="cfg__sum" id="cfgSum" aria-live="polite"><!-- configurator.js --></aside>
         </div>
       </div>
     </section>
