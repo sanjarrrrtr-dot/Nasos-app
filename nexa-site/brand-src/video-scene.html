@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<style>
+@font-face { font-family: "Unbounded"; font-weight: 600; src: url("fonts/unbounded-600.woff2") format("woff2"); }
+@font-face { font-family: "Unbounded"; font-weight: 700; src: url("fonts/unbounded-700.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 500; src: url("fonts/inter-500.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 600; src: url("fonts/inter-600.woff2") format("woff2"); }
+@font-face { font-family: "Plex"; font-weight: 500; src: url("fonts/plex-500.woff2") format("woff2"); }
+html, body { margin: 0; width: 1280px; height: 720px; overflow: hidden; }
+body { background: #F3F5F7; font-family: Inter, sans-serif; color: #101827; position: relative;
+  background-image: linear-gradient(#E8ECF0 1px, transparent 1px), linear-gradient(90deg, #E8ECF0 1px, transparent 1px);
+  background-size: 32px 32px; }
+.label { position: absolute; left: 64px; top: 52px; font: 500 15px Plex, monospace; letter-spacing: .1em; text-transform: uppercase; color: #64748B; }
+.title { position: absolute; left: 64px; top: 80px; font: 700 40px/1.1 Unbounded, sans-serif; letter-spacing: -.03em; }
+.title b { color: #0F766E; font-weight: 700; }
+.card { position: absolute; left: 0; top: 0; width: 170px; height: 54px; box-sizing: border-box; padding: 0 12px;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  background: #fff; border: 1.5px solid #101827; border-radius: 4px; font: 600 15px/1.2 Inter, sans-serif; will-change: transform; }
+.card.owner { background: #101827; color: #fff; }
+.card .msg, .card .role { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 10px; }
+svg.lines { position: absolute; inset: 0; }
+svg.lines path { fill: none; stroke: #101827; stroke-width: 1.6; }
+.tag { position: absolute; width: 170px; text-align: center; font: 500 13px Plex, monospace; color: #0F766E; }
+.tag span { display: block; margin-top: 4px; font: 500 14px Inter, sans-serif; color: #3A4557; }
+.chart { position: absolute; left: 430px; bottom: 22px; width: 420px; padding: 14px 20px; background: #fff; border: 1px solid #D6DCE4; }
+.chart h4 { margin: 0 0 12px; font: 500 12px Plex, monospace; letter-spacing: .08em; text-transform: uppercase; color: #64748B; }
+.row { display: grid; grid-template-columns: 54px 1fr 48px; gap: 10px; align-items: center; margin-top: 6px; font: 500 13px Plex, monospace; }
+.bar { height: 12px; background: #F3F5F7; position: relative; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: #0F766E; }
+.bar::after { content: ""; position: absolute; top: -4px; bottom: -4px; left: 83.33%; border-left: 1px dashed #101827; }
+.row b { text-align: right; font: 600 14px Inter, sans-serif; }
+.end { position: absolute; inset: 0; background: #101827; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; color: #fff; }
+.end img { height: 96px; }
+.end p { margin: 0; font: 600 34px Unbounded, sans-serif; letter-spacing: -.03em; }
+.end p b { color: #5FC4B8; font-weight: 600; }
+.end small { font: 500 18px Plex, monospace; letter-spacing: .08em; color: #C3CBD8; }
+</style></head>
+<body>
+<div class="label" id="label">Сейчас</div>
+<div class="title" id="title">Всё держится на&nbsp;собственнике</div>
+<svg class="lines" width="1280" height="720"><path id="lines" d="M640 222 V270 M640 324 V362 M175 362 H1105 M175 362 V390 M407 362 V390 M640 362 V390 M873 362 V390 M1105 362 V390"/></svg>
+<div id="cards"></div>
+<div id="tags"></div>
+<div class="chart" id="chart"><h4>План-факт продаж</h4>
+  <div class="row"><span>Нед. 1</span><div class="bar"><i data-v="80"></i></div><b data-v="80">0 %</b></div>
+  <div class="row"><span>Нед. 2</span><div class="bar"><i data-v="92"></i></div><b data-v="92">0 %</b></div>
+  <div class="row"><span>Нед. 3</span><div class="bar"><i data-v="104"></i></div><b data-v="104">0 %</b></div>
+  <div class="row"><span>Нед. 4</span><div class="bar"><i data-v="111"></i></div><b data-v="111">0 %</b></div>
+</div>
+<div class="end" id="end"><img src="logo-white.svg" alt=""><p>От&nbsp;хаоса к&nbsp;<b>системе</b></p><small>ДИАГНОСТИКА БИЗНЕСА · +7 707 779 96 56</small></div>
+<script>
+// Детерминированная анимация: render(t) рисует кадр для времени t в секундах.
+const W = 170, H = 54;
+const SLOTS = [
+  { x: 640, y: 195, role: "Собственник", owner: true },
+  { x: 640, y: 297, role: "Директор" },
+  { x: 175, y: 417, role: "Продажи" }, { x: 407, y: 417, role: "Маркетинг" }, { x: 640, y: 417, role: "Операции" },
+  { x: 873, y: 417, role: "Финансы" }, { x: 1105, y: 417, role: "Персонал" }
+];
+const MSGS = ["Кто звонил клиенту?", "Заявка потерялась", "Где договор?", "Скидку согласовали?", "Отчёт будет?", "Кто отвечает?", "План не выполнен"];
+const TAGS = [["ЦКП", "план продаж"], ["ЦКП", "заявки в бюджете"], ["ЦКП", "работа по SOP"], ["ЦКП", "отчёт в срок"], ["ЦКП", "команда в штате"]];
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const START = [[270, 250, -9], [1010, 235, 7], [600, 330, 4], [300, 545, 8], [860, 450, -6], [1060, 610, 10], [640, 600, -5]].map(([x, y, r]) => ({ x, y, r, ph: rnd() * 6.28 }));
+const cardsEl = document.getElementById("cards"), tagsEl = document.getElementById("tags");
+const cards = SLOTS.map((s, i) => {
+  const d = document.createElement("div"); d.className = "card";
+  d.innerHTML = `<span class="msg">${MSGS[i]}</span><span class="role">${s.role}</span>`;
+  cardsEl.appendChild(d); return d;
+});
+const tags = TAGS.map((t, i) => {
+  const d = document.createElement("div"); d.className = "tag";
+  d.style.left = (SLOTS[i + 2].x - W / 2) + "px"; d.style.top = "458px";
+  d.innerHTML = `${t[0]}<span>${t[1]}</span>`; tagsEl.appendChild(d); return d;
+});
+const lines = document.getElementById("lines"); const LEN = lines.getTotalLength ? 2600 : 2600;
+lines.style.strokeDasharray = LEN;
+const clamp = (v) => Math.max(0, Math.min(1, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const ease = (k) => 1 - Math.pow(1 - k, 3);
+const easeIO = (k) => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const label = document.getElementById("label"), title = document.getElementById("title");
+const chart = document.getElementById("chart"), end = document.getElementById("end");
+
+function render(t) {
+  // 0–3.2 c: хаос — карточки-вопросы дрожат и плавают
+  // 3.2–5.4 c: карточки собираются в оргструктуру, текст меняется на роли
+  cards.forEach((c, i) => {
+    const s = START[i], e = SLOTS[i];
+    const k = easeIO(seg(t, 3.2 + i * .08, 5.0 + i * .08));
+    const wob = (1 - k);
+    const x = s.x + (e.x - s.x) * k + Math.sin(t * 2.1 + s.ph) * 10 * wob;
+    const y = s.y + (e.y - s.y) * k + Math.cos(t * 1.7 + s.ph) * 8 * wob;
+    const r = s.r * wob + Math.sin(t * 3 + s.ph) * 2 * wob;
+    c.style.transform = `translate(${x - W / 2}px, ${y - H / 2}px) rotate(${r}deg)`;
+    c.style.opacity = clamp(t / .4);
+    const sw = seg(t, 4.3, 4.8);
+    c.querySelector(".msg").style.opacity = 1 - sw;
+    c.querySelector(".role").style.opacity = sw;
+    c.classList.toggle("owner", !!e.owner && sw > .5);
+  });
+  lines.style.strokeDashoffset = LEN * (1 - ease(seg(t, 5.0, 6.4)));
+  // текст сверху
+  const swT = seg(t, 4.6, 5.0);
+  if (t < 4.8) { label.textContent = "Сейчас"; title.innerHTML = "Всё держится на&nbsp;собственнике"; }
+  else { label.textContent = "После NEXA"; title.innerHTML = "У&nbsp;каждого отдела — <b>свой результат</b>"; }
+  const fade = t < 4.8 ? 1 - swT * 2 : clamp((t - 4.8) * 4);
+  label.style.opacity = title.style.opacity = Math.max(0, Math.min(1, fade));
+  // 6.2–7.6 c: ЦКП под отделами
+  tags.forEach((g, i) => { const k = ease(seg(t, 6.2 + i * .15, 6.8 + i * .15)); g.style.opacity = k; g.style.transform = `translateY(${(1 - k) * 8}px)`; });
+  // 7.4–9.6 c: график план-факт
+  const kc = ease(seg(t, 7.4, 7.9));
+  chart.style.opacity = kc; chart.style.transform = `translateY(${(1 - kc) * 16}px)`;
+  chart.querySelectorAll(".row").forEach((r, i) => {
+    const v = +r.querySelector("i").dataset.v, k = ease(seg(t, 7.8 + i * .25, 8.8 + i * .25));
+    r.querySelector("i").style.width = (v / 120 * 100 * k) + "%";
+    r.querySelector("b").textContent = Math.round(v * k) + " %";
+  });
+  // 10.2–12 c: финальная карточка с логотипом
+  const ke = ease(seg(t, 10.2, 10.8));
+  end.style.opacity = ke;
+  end.querySelector("img").style.transform = `translateY(${(1 - ke) * 12}px)`;
+}
+window.render = render;
+render(0);
+</script>
+</body></html>

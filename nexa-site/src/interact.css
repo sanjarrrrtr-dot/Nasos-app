@@ -68,3 +68,21 @@
   .org__sys text tspan:not(.b) { display: none; }
   .intent label { flex: 1 1 100%; }
 }
+
+/* Логотип */
+.brand__logo { display: block; height: 30px; width: auto; }
+.foot .brand__logo { height: 34px; }
+@media (max-width: 640px) { .brand__logo { height: 26px; } }
+
+/* Видео */
+.film { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 56px; align-items: center; }
+.film__frame { position: relative; margin: 0; border: 1px solid var(--ink-rule); background: #0B111C; }
+.film__frame video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; max-width: 100%; }
+.film__toggle {
+  position: absolute; right: 12px; bottom: 12px; padding: 7px 12px; border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, .25); background: rgba(16, 24, 39, .72); color: #fff;
+  font: 500 12px var(--f-mono); letter-spacing: .06em; text-transform: uppercase;
+}
+.film__toggle:hover { border-color: #fff; }
+@media (max-width: 960px) { .film { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+@media (max-width: 640px) { .film__frame { margin: 0 calc(var(--gut) * -1 + 4px); } }

@@ -10,6 +10,8 @@ import "./styles.css";
 import "./blocks.css";
 import "./type.css";
 import "./interact.css";
+import "./lab.css";
+import { initLab } from "./lab.js";
 
 const WA = "77077799656";
 const waLink = (text) => `https://wa.me/${WA}?text=${encodeURIComponent(text)}`;
@@ -159,6 +161,25 @@ const DEPTS = [
   });
   org.addEventListener("mouseleave", () => { if (!touch) show(-1); });
   org.addEventListener("focusout", (e) => { if (!org.contains(e.relatedTarget)) show(-1); });
+}
+
+/* ---------- Видео: играет, когда на экране; не играет само при «уменьшить движение» ---------- */
+{
+  const v = $("#filmVideo"), btn = $("#filmToggle");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let userPaused = reduce;
+  const sync = () => { btn.textContent = v.paused ? "Смотреть" : "Пауза"; btn.setAttribute("aria-pressed", String(v.paused)); };
+  const tryPlay = () => { const p = v.play(); if (p && p.catch) p.catch(() => sync()); };
+  btn.addEventListener("click", () => {
+    if (v.paused) { userPaused = false; tryPlay(); track("video_play"); } else { userPaused = true; v.pause(); }
+  });
+  v.addEventListener("play", sync); v.addEventListener("pause", sync);
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver((en) => {
+      if (en[0].isIntersecting) { if (!userPaused) tryPlay(); } else v.pause();
+    }, { threshold: 0.4 }).observe(v);
+  }
+  sync();
 }
 
 /* ---------- Решения по задачам ---------- */
@@ -402,7 +423,7 @@ function typograph(root) {
 /* ---------- Мягкое появление блоков (контент виден сразу) ---------- */
 function reveal() {
   if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const els = $$(".pains li, .steps li, .doc, .ai div, .price, .pr").filter((el) => el.getBoundingClientRect().top > innerHeight);
+  const els = $$(".pains li, .steps li, .doc, .price, .pr").filter((el) => el.getBoundingClientRect().top > innerHeight);
   els.forEach((el) => { el.classList.add("rv", "is-pre"); });
   const io = new IntersectionObserver((en) => en.forEach((x) => {
     if (x.isIntersecting) { x.target.classList.remove("is-pre"); io.unobserve(x.target); }
@@ -463,6 +484,7 @@ if ("IntersectionObserver" in window) {
   calc();
 }
 
+initLab({ $, $$, esc, track });
 showInd(0);
 renderQ();
 typograph(document.body);
