@@ -212,10 +212,11 @@ $("#tasksList").innerHTML = TASKS.map((x) => `
 
 /* ---------- «С чего начать»: переключатель задачи / отрасли ---------- */
 $$("#solutions .seg__b").forEach((b) => b.addEventListener("click", () => {
-  const ind = b.dataset.view === "ind";
+  const v = b.dataset.view;
   $$("#solutions .seg__b").forEach((x) => { const on = x === b; x.classList.toggle("is-on", on); x.setAttribute("aria-selected", String(on)); });
-  $("#solTasks").hidden = ind;
-  $("#industries").hidden = !ind;
+  $("#solTasks").hidden = v !== "tasks";
+  $("#industries").hidden = v !== "ind";
+  $("#solAll").hidden = v !== "all";
   window.dispatchEvent(new Event("nexa:layout"));
   track("solutions_view", { view: b.dataset.view });
 }));

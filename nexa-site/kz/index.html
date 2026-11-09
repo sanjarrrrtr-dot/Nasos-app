@@ -49,8 +49,7 @@
         <img class="brand__logo" src="../brand/logo.svg" alt="NEXA GROUP" width="236" height="40">
       </a>
       <nav class="nav" id="nav" aria-label="Бөлімдер">
-        <a href="#practices">Практикалар</a>
-        <a href="#solutions">Шешімдер</a>
+        <a href="#solutions">Қызметтер</a>
         <a href="#method">Қалай жұмыс істейміз</a>
         <a href="#results">Нәтиже</a>
         <a href="#prices">Құны</a>
@@ -187,25 +186,6 @@
       </div>
     </section>
 
-    <!-- Практики -->
-    <section class="sec sec--sheet" id="practices">
-      <div class="wrap">
-        <header class="row-head">
-          <div>
-            <h2 class="h2">Бір бренд астындағы сегіз практика</h2>
-            <p class="sub">Біреуінен бастауға болады, бірақ бәрі бір әдістеме бойынша жұмыс істейді және сіздің алдыңызда бір шартпен жауап береді.</p>
-          </div>
-          <div class="seg" role="tablist" aria-label="Практикалар сүзгісі">
-            <button class="seg__b is-on" type="button" role="tab" aria-selected="true" data-f="all">Барлығы</button>
-            <button class="seg__b" type="button" role="tab" aria-selected="false" data-f="manage">Басқару</button>
-            <button class="seg__b" type="button" role="tab" aria-selected="false" data-f="growth">Өсу</button>
-            <button class="seg__b" type="button" role="tab" aria-selected="false" data-f="tech">Технологиялар</button>
-          </div>
-        </header>
-        <div class="practices" id="practicesList"><!-- main.js --></div>
-      </div>
-    </section>
-
     <!-- Решения по задачам -->
     <section class="sec" id="solutions">
       <div class="wrap">
@@ -217,6 +197,7 @@
           <div class="seg" role="tablist" aria-label="Шешімдерді көрсету">
             <button class="seg__b is-on" type="button" role="tab" aria-selected="true" data-view="tasks" id="solTabTasks" aria-controls="solTasks">Міндеттер бойынша</button>
             <button class="seg__b" type="button" role="tab" aria-selected="false" data-view="ind" id="solTabInd" aria-controls="industries">Салалар бойынша</button>
+            <button class="seg__b" type="button" role="tab" aria-selected="false" data-view="all" id="solTabAll" aria-controls="solAll">Барлық практикалар</button>
           </div>
         </header>
         <div id="solTasks" role="tabpanel" aria-labelledby="solTabTasks">
@@ -225,6 +206,9 @@
         <div class="ind" id="industries" role="tabpanel" aria-labelledby="solTabInd" hidden>
           <div class="ind__tabs" role="tablist" aria-label="Салалар" id="indTabs"></div>
           <div class="ind__panel" id="indPanel" role="tabpanel" aria-live="polite"></div>
+        </div>
+        <div id="solAll" role="tabpanel" aria-labelledby="solTabAll" hidden>
+          <div class="practices" id="practicesList"><!-- main.js --></div>
         </div>
       </div>
     </section>
@@ -266,6 +250,7 @@
             <p class="sub">Презентациялар емес, компания соларға сүйеніп жұмыс істейтін жұмыс құжаттары. Төменде жеңілдетілген мысалдар.</p>
           </div>
         </header>
+        <p class="swipe" aria-hidden="true">Мысалдарды парақтаңыз →</p>
         <div class="docs">
           <article class="doc">
             <p class="doc__type">Мысал · Процесс паспорты</p>
@@ -394,7 +379,7 @@
     </section>
 
     <!-- Конструктор проекта -->
-    <section class="sec sec--sheet" id="build">
+    <section class="sec sec--sheet" id="build" hidden>
       <div class="wrap">
         <header class="row-head">
           <div>
@@ -501,8 +486,8 @@
         <p>Бизнестегі хаостан басқарылатын өсу жүйесіне.</p>
       </div>
       <nav aria-label="Практикалар">
-        <a href="#practices">Strategy</a><a href="#practices">System</a><a href="#practices">Marketing</a><a href="#practices">Sales</a>
-        <a href="#practices">AI &amp; Tech</a><a href="#practices">People</a><a href="#practices">Finance</a><a href="#practices">Academy</a>
+        <a href="#solutions">Strategy</a><a href="#solutions">System</a><a href="#solutions">Marketing</a><a href="#solutions">Sales</a>
+        <a href="#solutions">AI &amp; Tech</a><a href="#solutions">People</a><a href="#solutions">Finance</a><a href="#solutions">Academy</a>
       </nav>
       <div class="foot__c">
         <button class="foot__phone" type="button" data-copy="+77077799656" aria-label="+7 707 779 96 56 нөмірін көшіру">+7 707 779 96 56</button>

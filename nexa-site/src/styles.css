@@ -449,6 +449,13 @@ input.is-bad { border-color: #B42318; background: #FEF3F2; }
   .price, .price:first-child, .price:last-child { flex: 0 0 82%; scroll-snap-align: start; border: 1px solid var(--rule); background: var(--sheet); padding: 24px 20px; }
   .price--main { background: var(--ink); border-color: var(--ink); }
   .swipe { display: block; }
+  .docs {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; align-items: stretch;
+    margin: 0 calc(var(--gut-r) * -1) 0 calc(var(--gut) * -1); padding: 0 var(--gut-r) 12px var(--gut); scroll-padding: 0 var(--gut);
+    scrollbar-width: none;
+  }
+  .docs::-webkit-scrollbar { display: none; }
+  .docs .doc { flex: 0 0 86%; scroll-snap-align: start; }
   .form { grid-template-columns: minmax(0, 1fr); padding: 22px 18px; margin: 0 calc(var(--gut) * -1 + 4px); }
   .foot__in { grid-template-columns: minmax(0, 1fr); }
   .wa-fab { right: calc(14px + env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: 52px; height: 52px; }

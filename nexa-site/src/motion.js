@@ -104,7 +104,7 @@ export function initMotion({ $, $$ }) {
     }));
 
     /* Документы-примеры едут с разной скоростью — лёгкий параллакс */
-    $$(".docs .doc").forEach((d, i) => gsap.to(d, { y: [-10, -60, -25][i % 3], ease: "none", scrollTrigger: { trigger: ".docs", start: "top bottom", end: "bottom top", scrub: true } }));
+    if (matchMedia("(min-width: 641px)").matches) $$(".docs .doc").forEach((d, i) => gsap.to(d, { y: [-10, -60, -25][i % 3], ease: "none", scrollTrigger: { trigger: ".docs", start: "top bottom", end: "bottom top", scrub: true } }));
 
     /* Видео «выезжает» и раскрывается на всю ширину рамки */
     gsap.fromTo(".film__frame", { scale: .88, clipPath: "inset(6% 6% 6% 6% round 12px)" }, {
