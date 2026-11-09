@@ -12,6 +12,7 @@ import "./type.css";
 import "./interact.css";
 import "./lab.css";
 import "./motion.css";
+import "./motion2.css";
 import { initMotion } from "./motion.js";
 import { initLab } from "./lab.js";
 

@@ -3,6 +3,7 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import { playIntro, initPortal, initFlow } from "./motion2.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -57,7 +58,7 @@ export function initMotion({ $, $$ }) {
 
     /* ---------- Первый экран: заголовок «вырастает» по словам ---------- */
     const heroWords = splitWords($(".hero__title"));
-    const intro = gsap.timeline({ defaults: { ease: "power4.out" } });
+    const intro = gsap.timeline({ paused: true, defaults: { ease: "power4.out" } });
     intro
       .from(".hero .kicker", { y: 14, opacity: 0, duration: .6 })
       .from(heroWords, { yPercent: 110, duration: 1.1, stagger: .07 }, "<.1")
@@ -65,6 +66,12 @@ export function initMotion({ $, $$ }) {
       .from(".hero__cta > *, .hero__note", { y: 18, opacity: 0, duration: .7, stagger: .08 }, "<.15")
       .from(".hero__facts > div", { y: 18, opacity: 0, duration: .7, stagger: .08 }, "<.1")
       .from(".board", { y: 60, rotate: 1.5, opacity: 0, duration: 1.3, ease: "expo.out" }, .25);
+    intro.progress(0);
+    playIntro(() => intro.play());
+
+    /* Фирменный «портал» и световые линии в тёмных разделах */
+    initPortal();
+    initFlow(".sec--ink");
 
     // при уходе с первого экрана схема чуть уезжает и уменьшается — ощущение глубины
     gsap.to(".board", { yPercent: -10, scale: .96, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
