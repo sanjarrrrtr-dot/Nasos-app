@@ -34,6 +34,7 @@
 </head>
 <body>
   <a class="skip" href="#main">Перейти к содержанию</a>
+  <div class="progress" aria-hidden="true"></div>
 
   <header class="top" id="top">
     <div class="wrap top__in">
@@ -45,7 +46,6 @@
         <a href="#solutions">Решения</a>
         <a href="#method">Как работаем</a>
         <a href="#results">Результат</a>
-        <a href="#cases">Кейсы</a>
         <a href="#prices">Стоимость</a>
         <a href="#faq">Вопросы</a>
         <a class="nav__cta" href="#diagnostic">Пройти диагностику</a>
@@ -114,6 +114,14 @@
         </figure>
       </div>
     </section>
+
+    <!-- Бегущая строка с практиками -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>Стратегия</span><span>Систематизация</span><span>Маркетинг</span><span>Продажи</span><span>IT и&nbsp;AI</span><span>Персонал</span><span>Финансы</span><span>Обучение</span>
+        <span>Стратегия</span><span>Систематизация</span><span>Маркетинг</span><span>Продажи</span><span>IT и&nbsp;AI</span><span>Персонал</span><span>Финансы</span><span>Обучение</span>
+      </div>
+    </div>
 
     <!-- С чем приходят -->
     <section class="sec" id="pains">
@@ -194,24 +202,18 @@
       <div class="wrap">
         <header class="row-head">
           <div>
-            <h2 class="h2">Решения по&nbsp;задачам</h2>
-            <p class="sub">Выберите, что нужно сейчас. Подскажем, какие практики подключить и&nbsp;с&nbsp;чего начать.</p>
+            <h2 class="h2">С&nbsp;чего начать</h2>
+            <p class="sub">Выберите вашу задачу или отрасль. Подскажем, какие практики подключить первыми. Точный план составляем после диагностики.</p>
+          </div>
+          <div class="seg" role="tablist" aria-label="Показать решения">
+            <button class="seg__b is-on" type="button" role="tab" aria-selected="true" data-view="tasks" id="solTabTasks" aria-controls="solTasks">По задачам</button>
+            <button class="seg__b" type="button" role="tab" aria-selected="false" data-view="ind" id="solTabInd" aria-controls="industries">По отраслям</button>
           </div>
         </header>
-        <ul class="tasks" id="tasksList"><!-- main.js --></ul>
-      </div>
-    </section>
-
-    <!-- Отрасли -->
-    <section class="sec" id="industries">
-      <div class="wrap">
-        <header class="row-head">
-          <div>
-            <h2 class="h2">И&nbsp;по&nbsp;отраслям</h2>
-            <p class="sub">Типовые задачи, с&nbsp;которых начинаем. Точный план составляем после диагностики.</p>
-          </div>
-        </header>
-        <div class="ind">
+        <div id="solTasks" role="tabpanel" aria-labelledby="solTabTasks">
+          <ul class="tasks" id="tasksList"><!-- main.js --></ul>
+        </div>
+        <div class="ind" id="industries" role="tabpanel" aria-labelledby="solTabInd" hidden>
           <div class="ind__tabs" role="tablist" aria-label="Отрасли" id="indTabs"></div>
           <div class="ind__panel" id="indPanel" role="tabpanel" aria-live="polite"></div>
         </div>
@@ -290,7 +292,7 @@
 
 
     <!-- Кейсы -->
-    <section class="sec sec--sheet" id="cases">
+    <section class="sec sec--sheet" id="cases" hidden>
       <div class="wrap">
         <header class="row-head">
           <div>
@@ -329,7 +331,7 @@
     </section>
 
     <!-- Основатель -->
-    <section class="sec" id="founder">
+    <section class="sec" id="founder" hidden>
       <div class="wrap founder">
         <div class="founder__photo" role="img" aria-label="Место для фото основателя"><span>Фото основателя</span></div>
         <div class="founder__text">
@@ -341,15 +343,6 @@
             <li>Ключевые результаты в&nbsp;цифрах</li>
           </ul>
           <p class="note">Блок заполним вашими данными и&nbsp;фото.</p>
-          <h3 class="team__h">Кто ещё работает в&nbsp;проекте</h3>
-          <dl class="team">
-            <div><dt>Руководитель проекта</dt><dd>План, сроки, связь с&nbsp;вами</dd></div>
-            <div><dt>Бизнес-консультант</dt><dd>Оргструктура, ЦКП, KPI, регламенты</dd></div>
-            <div><dt>Эксперт по&nbsp;продажам</dt><dd>Отдел продаж, CRM, скрипты</dd></div>
-            <div><dt>Маркетолог</dt><dd>Реклама, заявки, аналитика</dd></div>
-            <div><dt>IT и&nbsp;AI</dt><dd>CRM, ERP, интеграции, AI-агенты</dd></div>
-            <div><dt>Финансы и&nbsp;HR</dt><dd>Учёт, бюджеты, подбор, обучение</dd></div>
-          </dl>
         </div>
       </div>
     </section>

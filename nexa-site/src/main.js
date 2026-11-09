@@ -11,6 +11,8 @@ import "./blocks.css";
 import "./type.css";
 import "./interact.css";
 import "./lab.css";
+import "./motion.css";
+import { initMotion } from "./motion.js";
 import { initLab } from "./lab.js";
 
 const WA = "77077799656";
@@ -116,8 +118,8 @@ plist.addEventListener("click", (e) => {
   head.setAttribute("aria-expanded", String(open));
   $(".pr__body", pr).hidden = !open;
 });
-$$(".seg__b").forEach((b) => b.addEventListener("click", () => {
-  $$(".seg__b").forEach((x) => { const on = x === b; x.classList.toggle("is-on", on); x.setAttribute("aria-selected", String(on)); });
+$$("#practices .seg__b").forEach((b) => b.addEventListener("click", () => {
+  $$("#practices .seg__b").forEach((x) => { const on = x === b; x.classList.toggle("is-on", on); x.setAttribute("aria-selected", String(on)); });
   $$(".pr", plist).forEach((pr) => { pr.hidden = b.dataset.f !== "all" && pr.dataset.cat !== b.dataset.f; });
   track("practice_filter", { filter: b.dataset.f });
 }));
@@ -196,6 +198,16 @@ $("#tasksList").innerHTML = TASKS.map((x) => `
       <span class="task__p">${esc(x.p)}</span>
     </a>
   </li>`).join("");
+
+/* ---------- «С чего начать»: переключатель задачи / отрасли ---------- */
+$$("#solutions .seg__b").forEach((b) => b.addEventListener("click", () => {
+  const ind = b.dataset.view === "ind";
+  $$("#solutions .seg__b").forEach((x) => { const on = x === b; x.classList.toggle("is-on", on); x.setAttribute("aria-selected", String(on)); });
+  $("#solTasks").hidden = ind;
+  $("#industries").hidden = !ind;
+  window.dispatchEvent(new Event("nexa:layout"));
+  track("solutions_view", { view: b.dataset.view });
+}));
 
 /* ---------- Отрасли ---------- */
 const INDUSTRIES = [
@@ -485,4 +497,4 @@ initLab({ $, $$, esc, track });
 showInd(0);
 renderQ();
 typograph(document.body);
-reveal();
+initMotion({ $, $$ });

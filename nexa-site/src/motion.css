@@ -1,0 +1,26 @@
+/* Стили для системы движения */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+html.has-motion { scroll-behavior: auto; }
+
+/* Маска для слов в заголовках */
+.mw { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .08em; margin-bottom: -.08em; }
+.mwi { display: inline-block; will-change: transform; }
+
+/* Полоса прогресса чтения */
+.progress { position: fixed; left: 0; right: 0; top: 0; height: 2px; z-index: 120; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none; }
+
+/* Шапка прячется при прокрутке вниз и возвращается при прокрутке вверх */
+.top { transition: transform .45s var(--ease), border-color .2s, background .2s; }
+.top.is-hidden { transform: translateY(-100%); }
+
+/* Бегущая строка с практиками */
+.marquee { overflow: hidden; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: var(--sheet); padding-block: 18px; }
+.marquee__track { display: flex; width: max-content; white-space: nowrap; }
+.marquee__track span { display: inline-flex; align-items: center; gap: 28px; padding-right: 28px; font: 600 clamp(22px, 2.6vw, 34px)/1 var(--f-display); letter-spacing: -.02em; color: var(--ink); }
+.marquee__track span::after { content: ""; width: 10px; height: 10px; border-radius: 2px; background: var(--accent); }
+.marquee__track span:nth-child(even) { color: transparent; -webkit-text-stroke: 1px var(--ink); }
+
+.film__frame { will-change: transform, clip-path; }
+.band { will-change: clip-path; }
