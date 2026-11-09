@@ -1,0 +1,15 @@
+/* Тёплый вариант: песочный фон в двух блоках и оранжевый как точечный второй акцент.
+   Включается классом "warm" на <html>. Без класса сайт выглядит как раньше. */
+html.warm {
+  --sand: #F4F1EB;       /* Alabaster */
+  --sand-rule: #E2D8C6;
+  --warm: #C6601F;       /* оранжевый акцент, только цифры и метки */
+  --warm-ink: #F0A36B;   /* он же на тёмном фоне */
+}
+html.warm #results,
+html.warm #faq { background: var(--sand); border-color: var(--sand-rule); }
+html.warm #results .doc { border-color: var(--sand-rule); }
+html.warm .calc__sum,
+html.warm .calc__sum span { color: var(--warm); }
+html.warm .price__flag { color: var(--warm-ink); }
+html.warm .chart__plan { color: var(--warm); }

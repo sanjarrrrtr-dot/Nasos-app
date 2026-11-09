@@ -14,6 +14,7 @@ import "./lab.css";
 import "./motion.css";
 import "./motion2.css";
 import "./micro.css";
+import "./warm.css";
 import { initMicro } from "./micro.js";
 import "./configurator.css";
 import { initConfigurator } from "./configurator.js";
