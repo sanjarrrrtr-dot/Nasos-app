@@ -1,0 +1,27 @@
+/* Счётчики: цифры одной ширины, чтобы строка не «дрожала» */
+.cnt { display: inline-block; font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Длинное казахское слово в заголовке на самых узких экранах */
+@media (max-width: 370px) { html[lang="kk"] .hero__title { font-size: 25px; } }
+
+/* Карточки приподнимаются при наведении (только мышь) */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .price { transition: background .25s, transform .35s var(--ease), box-shadow .35s var(--ease); }
+  .price:hover { transform: translateY(-6px); z-index: 1; }
+  .price:not(.price--main):hover { box-shadow: 0 24px 40px -28px rgba(16, 24, 39, .45), inset 0 3px 0 var(--accent); }
+  .price--main:hover { box-shadow: 0 28px 48px -26px rgba(16, 24, 39, .7); }
+  .task a { transition: background .2s, color .2s, padding .3s var(--ease); }
+  .task a:hover { background: var(--sheet); padding-left: 16px; }
+  .pr { transition: background .25s; }
+  .pr:hover { background: rgba(15, 118, 110, .035); }
+  .doc { transition: transform .35s var(--ease), box-shadow .35s var(--ease); }
+  .doc:hover { box-shadow: 0 30px 50px -34px rgba(16, 24, 39, .5); }
+}
+
+/* Переход между языками: страница мягко гаснет и проявляется, без белой вспышки */
+html { background: var(--paper); }
+body { transition: opacity .22s ease, transform .22s ease; }
+html.is-leaving body { opacity: 0; }
+html.is-leaving body { transform: translateY(-6px); }
+@media (prefers-reduced-motion: reduce) { body { transition: none; } }
+@view-transition { navigation: auto; }
