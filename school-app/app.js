@@ -2,7 +2,8 @@
 // Данные хранятся в localStorage браузера (без сервера).
 
 const STORAGE_KEY = 'school-app-v1';
-const CLASSES = ['5А', '5Б', '6А', '6Б', '7А', '7Б', '8А', '8Б', '9А', '9Б', '10А', '11А'];
+const CONFIG = window.SCHOOL_CONFIG || {};
+const CLASSES = CONFIG.classes || ['5А', '5Б', '6А', '6Б', '7А', '7Б', '8А', '8Б', '9А', '9Б', '10А', '11А'];
 const ATT_STATES = { present: 'Был', late: 'Опоздал', absent: 'Не был' };
 
 // ---------- Хранилище ----------
@@ -290,6 +291,27 @@ function renderAll() {
   renderAttendance();
 }
 
+function applyBranding() {
+  const root = document.documentElement.style;
+  if (CONFIG.accent) root.setProperty('--accent', CONFIG.accent);
+  if (CONFIG.accent2) root.setProperty('--accent-2', CONFIG.accent2);
+  if (CONFIG.name) {
+    document.title = CONFIG.name;
+    $('brand-name').textContent = CONFIG.name;
+  }
+  if (CONFIG.subtitle) $('brand-sub').textContent = CONFIG.subtitle;
+  if (CONFIG.shortMark) $('brand-mark').textContent = CONFIG.shortMark;
+}
+
+function seedDemo() {
+  const demo = CONFIG.demo;
+  if (!demo || !demo.students || state.students.length) return;
+  demo.students.forEach((s) => state.students.push({ id: newId(), name: s.name, class: s.class }));
+  save();
+}
+
 $('grade-date').value = todayISO();
+applyBranding();
 applyTelegramTheme();
+seedDemo();
 renderAll();
