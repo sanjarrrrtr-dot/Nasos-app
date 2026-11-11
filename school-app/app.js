@@ -24,6 +24,26 @@ function save() {
   }
 }
 
+// ---------- Telegram Mini App ----------
+// В Telegram window.Telegram.WebApp доступен; вне Telegram приложение работает как обычная страница.
+const TG = window.Telegram && window.Telegram.WebApp;
+
+function applyTelegramTheme() {
+  if (!TG) return;
+  TG.ready();
+  TG.expand();
+  const p = TG.themeParams || {};
+  const root = document.documentElement.style;
+  const set = (name, value) => value && root.setProperty(name, value);
+  set('--bg', p.secondary_bg_color);
+  set('--card', p.bg_color);
+  set('--text', p.text_color);
+  set('--muted', p.hint_color);
+  set('--accent', p.button_color);
+  set('--border', p.section_separator_color);
+  document.body.style.color = p.text_color || '';
+}
+
 let state = load();
 let idCounter = Date.now();
 const newId = () => String(idCounter++);
@@ -271,4 +291,5 @@ function renderAll() {
 }
 
 $('grade-date').value = todayISO();
+applyTelegramTheme();
 renderAll();
