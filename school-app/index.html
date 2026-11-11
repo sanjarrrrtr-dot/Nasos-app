@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Школьный журнал — мини‑приложение</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">Ш</span>
+      <div>
+        <div class="brand-name">Школьный журнал</div>
+        <div class="brand-sub">Ученики · оценки · посещаемость</div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="students">Ученики</button>
+      <button class="tab" data-tab="grades">Оценки</button>
+      <button class="tab" data-tab="attendance">Посещаемость</button>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <!-- Ученики -->
+    <section id="tab-students" class="panel active">
+      <h2>Список учеников</h2>
+      <form id="student-form" class="row">
+        <input id="student-name" type="text" placeholder="Фамилия Имя" required />
+        <select id="student-class" required></select>
+        <button type="submit" class="btn">Добавить</button>
+      </form>
+      <div id="students-list"></div>
+    </section>
+
+    <!-- Оценки -->
+    <section id="tab-grades" class="panel">
+      <h2>Журнал оценок</h2>
+      <form id="grade-form" class="row">
+        <select id="grade-student" required></select>
+        <input id="grade-subject" type="text" placeholder="Предмет, например: Математика" required />
+        <select id="grade-value" required>
+          <option value="5">5</option>
+          <option value="4">4</option>
+          <option value="3">3</option>
+          <option value="2">2</option>
+        </select>
+        <input id="grade-date" type="date" required />
+        <button type="submit" class="btn">Поставить</button>
+      </form>
+      <div class="row filter">
+        <label>Класс:
+          <select id="grades-class-filter"></select>
+        </label>
+      </div>
+      <div id="grades-table"></div>
+    </section>
+
+    <!-- Посещаемость -->
+    <section id="tab-attendance" class="panel">
+      <h2>Посещаемость</h2>
+      <div class="row filter">
+        <label>Дата: <input id="att-date" type="date" /></label>
+        <label>Класс:
+          <select id="att-class-filter"></select>
+        </label>
+      </div>
+      <div id="attendance-list"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

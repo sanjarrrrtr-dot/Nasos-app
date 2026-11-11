@@ -1,0 +1,142 @@
+:root {
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --text: #1d2733;
+  --muted: #6b7a8a;
+  --border: #e1e7ef;
+  --accent: #2e6df2;
+  --accent-2: #14b8a3;
+  --good: #1f9e5c;
+  --warn: #d98a12;
+  --bad: #d64545;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1620;
+    --card: #17212d;
+    --text: #e6edf5;
+    --muted: #8b99a8;
+    --border: #263241;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+.mark {
+  width: 38px; height: 38px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+.brand-name { font-weight: 700; }
+.brand-sub { font-size: 12px; color: var(--muted); }
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab {
+  font: inherit; cursor: pointer;
+  padding: 8px 14px; border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent; color: var(--text);
+}
+.tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 80px; }
+h2 { font-size: 22px; margin: 0 0 16px; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+.row {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 16px;
+}
+.row input, .row select, .filter select, .filter input, .att-date {
+  font: inherit; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--card); color: var(--text);
+  min-width: 0;
+}
+.row input[type="text"] { flex: 1 1 220px; }
+
+.filter label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+
+.btn {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 10px 18px; border-radius: 10px; border: none;
+  background: var(--accent); color: #fff;
+}
+.btn:hover { filter: brightness(1.05); }
+.btn.ghost {
+  background: transparent; color: var(--bad);
+  border: 1px solid var(--border);
+  padding: 6px 10px; font-size: 13px;
+}
+
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.card .meta { font-size: 13px; color: var(--muted); }
+
+table {
+  width: 100%; border-collapse: collapse;
+  background: var(--card); border-radius: 14px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+td.center, th.center { text-align: center; }
+tr:last-child td { border-bottom: none; }
+
+.grade-chip {
+  display: inline-block; min-width: 26px; padding: 2px 8px;
+  border-radius: 8px; font-weight: 700; color: #fff; text-align: center;
+}
+.g5 { background: var(--good); }
+.g4 { background: #5aa9e6; }
+.g3 { background: var(--warn); }
+.g2 { background: var(--bad); }
+
+.att-btn {
+  font: inherit; font-size: 13px; cursor: pointer;
+  padding: 6px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent; color: var(--text);
+  margin-left: 4px;
+}
+.att-btn.on-present { background: var(--good); color: #fff; border-color: var(--good); }
+.att-btn.on-absent { background: var(--bad); color: #fff; border-color: var(--bad); }
+.att-btn.on-late { background: var(--warn); color: #fff; border-color: var(--warn); }
+
+.empty {
+  text-align: center; padding: 40px 16px; color: var(--muted);
+  border: 1.5px dashed var(--border); border-radius: 14px;
+}
+
+.summary { font-size: 13px; color: var(--muted); margin: 6px 0 14px; }
+
+@media (max-width: 560px) {
+  th, td { padding: 8px; font-size: 13px; }
+  .att-btn { padding: 5px 7px; font-size: 12px; }
+}
