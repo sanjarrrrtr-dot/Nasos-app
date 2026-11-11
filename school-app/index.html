@@ -3,22 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Школьный журнал — мини‑приложение</title>
+  <title>Кабинет школы (демо)</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="mark" id="brand-mark">Ш</span>
+      <span class="mark" id="brand-mark">Д</span>
       <div>
-        <div class="brand-name" id="brand-name">Школьный журнал</div>
-        <div class="brand-sub" id="brand-sub">Ученики · оценки · посещаемость</div>
+        <div class="brand-name" id="brand-name">Кабинет школы (демо)</div>
+        <div class="brand-sub" id="brand-sub">Расписание · журнал · родители</div>
       </div>
     </div>
     <nav class="tabs" id="tabs">
       <button class="tab active" data-tab="students">Ученики</button>
+      <button class="tab" data-tab="schedule">Расписание</button>
       <button class="tab" data-tab="grades">Оценки</button>
       <button class="tab" data-tab="attendance">Посещаемость</button>
+      <button class="tab" data-tab="parent">Кабинет родителя</button>
     </nav>
   </header>
 
@@ -32,6 +34,52 @@
         <button type="submit" class="btn">Добавить</button>
       </form>
       <div id="students-list"></div>
+    </section>
+
+    <!-- Расписание и замены -->
+    <section id="tab-schedule" class="panel">
+      <h2>Расписание</h2>
+      <div class="row filter">
+        <label>Класс:
+          <select id="sch-class-view"></select>
+        </label>
+      </div>
+      <div id="schedule-view"></div>
+
+      <h3>Добавить урок</h3>
+      <form id="lesson-form" class="row">
+        <select id="lesson-class" required></select>
+        <select id="lesson-weekday" required>
+          <option value="1">Понедельник</option>
+          <option value="2">Вторник</option>
+          <option value="3">Среда</option>
+          <option value="4">Четверг</option>
+          <option value="5">Пятница</option>
+        </select>
+        <input id="lesson-time" type="time" required />
+        <input id="lesson-subject" type="text" placeholder="Предмет" required />
+        <input id="lesson-teacher" type="text" placeholder="Учитель" />
+        <input id="lesson-room" type="text" placeholder="Кабинет" />
+        <button type="submit" class="btn">Добавить</button>
+      </form>
+
+      <h3>Замены и изменения</h3>
+      <form id="rep-form" class="row">
+        <input id="rep-date" type="date" required />
+        <select id="rep-class" required></select>
+        <input id="rep-time" type="time" />
+        <input id="rep-text" type="text" placeholder="Например: урок переносится на 13:00" required />
+        <button type="submit" class="btn">Добавить</button>
+      </form>
+      <div id="replacements-list"></div>
+
+      <h3>Сообщения классу</h3>
+      <form id="msg-form" class="row">
+        <select id="msg-class" required></select>
+        <input id="msg-text" type="text" placeholder="Текст для родителей класса" required />
+        <button type="submit" class="btn">Отправить</button>
+      </form>
+      <div id="messages-list"></div>
     </section>
 
     <!-- Оценки -->
@@ -67,6 +115,18 @@
         </label>
       </div>
       <div id="attendance-list"></div>
+    </section>
+
+    <!-- Кабинет родителя -->
+    <section id="tab-parent" class="panel">
+      <h2>Кабинет родителя</h2>
+      <div class="row filter">
+        <label>Ученик:
+          <select id="parent-student"></select>
+        </label>
+        <label>Дата: <input id="parent-date" type="date" /></label>
+      </div>
+      <div id="parent-view"></div>
     </section>
   </main>
 

@@ -140,3 +140,11 @@ tr:last-child td { border-bottom: none; }
   th, td { padding: 8px; font-size: 13px; }
   .att-btn { padding: 5px 7px; font-size: 12px; }
 }
+
+/* Расписание, замены, кабинет родителя */
+h3 { font-size: 16px; margin: 22px 0 10px; }
+.repl { border-left: 4px solid var(--warn); }
+.repl-text { color: var(--warn); font-weight: 600; }
+.parent-head {
+  font-size: 18px; font-weight: 700; margin-bottom: 4px;
+}
